@@ -2,22 +2,24 @@
 
 public partial class MainPage : ContentPage
 {
-	int count = 0;
-
 	public MainPage()
 	{
+		ResourceDictionary ColorResource = Application.Current.Resources.MergedDictionaries.FirstOrDefault() as ResourceDictionary;
+		Color gray200 = ColorResource["Gray200"] as Color;
 		InitializeComponent();
 	}
 
-	private void OnCounterClicked(object? sender, EventArgs e)
+	protected override void OnAppearing()
 	{
-		count++;
+		base.OnAppearing();
+		this.Window.MinimumHeight = 400;
+		this.Window.MinimumWidth = 450;
+		this.Window.Height = 400;
+		this.Window.Width = 450;
+	}
 
-		if (count == 1)
-			CounterBtn.Text = $"Clicked {count} time";
-		else
-			CounterBtn.Text = $"Clicked {count} times";
+	public void OnSendMessageBtnClicked(object sender, EventArgs e)
+	{
 
-		SemanticScreenReader.Announce(CounterBtn.Text);
 	}
 }
