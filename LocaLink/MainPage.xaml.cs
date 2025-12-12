@@ -2,7 +2,8 @@
 
 public class ChatItem
 {
-	public string Message { get; set; }
+	public string Name { get; set; } = "";
+	public string Message { get; set; } = "";
 	public bool IsSentByUser { get; set; }
 }
 
@@ -18,10 +19,10 @@ public partial class MainPage : ContentPage
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
-		this.Window.MinimumHeight = 400;
-		this.Window.MinimumWidth = 450;
-		this.Window.Height = 400;
-		this.Window.Width = 450;
+		this.Window.MinimumHeight = 600;
+		this.Window.MinimumWidth = 1024;
+		this.Window.Height = 600;
+		this.Window.Width = 1024;
 	}
 
 	public void OnSendMessageBtnClicked(object sender, EventArgs e)
