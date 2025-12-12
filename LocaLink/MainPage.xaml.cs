@@ -1,5 +1,11 @@
 ﻿namespace LocaLink;
 
+public class ChatItem
+{
+	public string Message { get; set; }
+	public bool IsSentByUser { get; set; }
+}
+
 public partial class MainPage : ContentPage
 {
 	public MainPage()
