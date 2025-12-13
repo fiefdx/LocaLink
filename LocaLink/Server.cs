@@ -262,7 +262,7 @@ public class JsonWebSocketServer
                     {
                         Type = "notification",
                         Name = "System",
-                        Notification = $"<System: {msg.Name} join this server!>",
+                        Notification = $"<System: {msg.Name} join this server>",
                         Users = GetUsers()
                     });
                 }
@@ -312,7 +312,7 @@ public class JsonWebSocketServer
             {
                 Type = "notification",
                 Name = "System",
-                Notification = $"<System: {user.Name} leave this server!>",
+                Notification = $"<System: {user.Name} leave this server>",
                 Users = GetUsers()
             });
         }
