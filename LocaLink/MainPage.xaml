@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:LocaLink.Controls"
              xmlns:local="clr-namespace:LocaLink"
              x:Class="LocaLink.MainPage">
 
@@ -153,7 +154,7 @@
             Margin="5,5,5,0"
             StrokeThickness="2"
             x:Name="MessageWindowBorder">
-            <ListView
+            <controls:AutoScrollListView
                 x:Name="MessagesListView"
                 ItemsSource="{Binding WsMessages}">
                 <ListView.ItemTemplate>
@@ -174,6 +175,12 @@
                                         FontSize="12"
                                         MaxLines="1" 
                                         LineBreakMode="TailTruncation" />
+                                    <Label
+                                        Text="{Binding Notification}"
+                                        TextColor="Gray"
+                                        FontSize="12"
+                                        MaxLines="1" 
+                                        LineBreakMode="TailTruncation" />
                                 </HorizontalStackLayout>
                                 <!-- <Label
                                     Text="{Binding Name}"
@@ -191,7 +198,7 @@
                         <!-- <TextCell Text="{Binding Name}" Detail="{Binding Message}" /> -->
                     </DataTemplate>
                 </ListView.ItemTemplate>
-            </ListView>
+            </controls:AutoScrollListView>
         </Border>
 
         <Border

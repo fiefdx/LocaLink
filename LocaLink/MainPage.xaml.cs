@@ -5,12 +5,6 @@ using System.Windows.Input;
 
 namespace LocaLink;
 
-public class ChatItem
-{
-	public string Name { get; set; } = "";
-	public string Message { get; set; } = "";
-	public bool IsSentByUser { get; set; }
-}
 
 public partial class MainPage : ContentPage
 {
@@ -128,6 +122,7 @@ public partial class MainPage : ContentPage
 						{
 							msg.Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 							_wsMessages.Add(msg);
+							// MessagesListView.ScrollTo(msg, ScrollToPosition.End, true);
 						});
                     }
                     else if (msg.Type == "join")
@@ -140,6 +135,16 @@ public partial class MainPage : ContentPage
 							ServerIPPort.Text = ServerInfo.Info;
 							LeaveBtn.IsEnabled = true;
 							_wsMessages.Clear();
+						});
+                    }
+					else if (msg.Type == "notification")
+                    {
+						MainThread.BeginInvokeOnMainThread(() =>
+						{
+							msg.Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+							// Console.WriteLine($"Get {msg.Type}: {msg.Data}");
+							_wsMessages.Add(msg);
+							// MessagesListView.ScrollTo(msg, ScrollToPosition.End, true);
 						});
                     }
                 };
