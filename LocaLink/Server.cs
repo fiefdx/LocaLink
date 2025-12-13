@@ -172,6 +172,7 @@ public class JsonWebSocketServer
         {
             if (Running)
             {
+                // Console.WriteLine("websocket server running ...");
                 var ctx = await listener.GetContextAsync();
 
                 if (!ctx.Request.IsWebSocketRequest)
@@ -185,9 +186,11 @@ public class JsonWebSocketServer
             }
             else
             {
+                // Console.WriteLine("websocket server not running ...");
                 await Task.Delay(100);
                 continue;
             }
+            await Task.Delay(500);
         }
     }
 
@@ -227,7 +230,7 @@ public class JsonWebSocketServer
             {
                 // Console.Write($"\bUser joining: {msg.Name}, from {clientIp}\n>");
                 var isLocal = IsLocalConnection(clientIp.ToString());
-                Console.Write($"\bUser joining: {msg.Name}, from {clientIp} (Local Manager: {isLocal})\n>");
+                // Console.Write($"\bUser joining: {msg.Name}, from {clientIp} (Local Manager: {isLocal})\n>");
                 var token = GenerateToken();
                 if (isLocal)
                 {

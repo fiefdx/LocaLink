@@ -1,4 +1,6 @@
 ﻿using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text.Json;
 
 namespace LocaLink;
 
@@ -87,25 +89,87 @@ public partial class MainPage : ContentPage
 		clientThread.Start();
 	}
 
-	public void ServerListSelected(object sender, SelectedItemChangedEventArgs e)
+	async public void ServerListSelected(object sender, SelectedItemChangedEventArgs e)
 	{
 		if (e.SelectedItem != null)
 		{
 			// Cast the selected item to your model type
 			var ServerInfo = (WsServerInfo)e.SelectedItem;
 			
+			// DisplayAlert("Join Server", $"Name: {ServerInfo.Name}\nAddress: {ServerInfo.Info}", "OK");
+			bool answer = await DisplayAlert("Join Server", $"Name: {ServerInfo.Name}\nAddress: {ServerInfo.Info}", "Yes", "No");
+			if (answer)
+			{
+				Console.WriteLine("User chose Yes.");
+				var parts = ServerInfo.Info.Split(':');
+				if (Servers.WsClient != null)
+				{
+					Servers.WsClient.Stop();
+				}
+				Servers.WsClient = new JsonWebSocketClient($"ws://{parts[0]}:{parts[1]}/ws");
+				Servers.WsClientThread = new Thread(async () =>
+                {
+                    await Servers.WsClient.StartAsync();
+                });
+				Servers.WsClientThread.IsBackground = true;
+                Servers.WsClientThread.Start();
+				Servers.WsClient.OnMessage += (msg) =>
+                {
+                    if (msg.Type == "chat")
+                    {
+                        Console.WriteLine($"{msg.Type}: {JsonSerializer.Serialize(msg.Data)}");
+                    }
+                    else if (msg.Type == "join")
+                    {
+                        Servers.WsClient.SetToken(msg.Token.ToString());
+						Console.WriteLine($"Get Token: {Servers.WsClient.GetToken()}");
+						MainThread.BeginInvokeOnMainThread(() =>
+						{
+							ServerName.Text = ServerInfo.Name;
+							ServerIPPort.Text = ServerInfo.Info;
+							LeaveBtn.IsEnabled = true;
+						});
+                    }
+                };
 
-			// Perform actions with the selected item, e.g., display an alert
-			DisplayAlert("Server Selected", $"You selected: {ServerInfo.Name}", "OK");
+				var name = "Unknown";
+				if (UserName.Text != "")
+				{
+					name = UserName.Text;
+				}
+
+			 	await Task.Delay(1000);
+				var msg = new WsMessage
+                {
+                    Type = "join",
+                    Data = "",
+                    Name = name
+                };
+                Servers.WsClient.SendAsync(msg);
+                Console.WriteLine($"Joining server {parts[0]}:{parts[1]} ...");
+			}
+			else
+			{
+				Console.WriteLine("User chose No.");
+			}
 
 			// Optional: Deselect the item after action (prevents the event from firing repeatedly if re-selected)
 			((ListView)sender).SelectedItem = null;
 		}
 	}
 
-	public void OnJoinBtnClicked(object sender, EventArgs e)
+	public void OnLeaveBtnClicked(object sender, EventArgs e)
 	{
-		
+		if (Servers.WsClient != null)
+		{
+			Servers.WsClient.Stop();
+			Console.WriteLine("leave the server.");
+			Servers.WsClient = null;
+			Servers.WsClientThread = null;
+			ServerName.Text = "";
+			ServerIPPort.Text = "";
+			LeaveBtn.IsEnabled = false;
+		}
 	}
 
 	public void OnSendMessageBtnClicked(object sender, EventArgs e)

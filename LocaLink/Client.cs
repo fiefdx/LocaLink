@@ -131,7 +131,7 @@ public class DiscoveryClient
 public class JsonWebSocketClient
 {
     private ClientWebSocket socket = new();
-    private readonly Uri uri;
+    private Uri uri;
     private bool running = true;
     private string Token { get; set; } = "";
 
@@ -149,7 +149,17 @@ public class JsonWebSocketClient
 
     public JsonWebSocketClient(string url)
     {
+        if (url != "")
+        {
+            uri = new Uri(url);
+        }
+    }
+
+    public void OpenUri(string url)
+    {
+        Stop();
         uri = new Uri(url);
+        running = true;
     }
 
     public async Task StartAsync()
@@ -167,7 +177,7 @@ public class JsonWebSocketClient
             }
             catch (Exception ex)
             {
-                Console.WriteLine("[Client] Error: " + ex.Message);
+                Console.WriteLine("[Client] Error: " + ex.Message + ", " + uri.AbsoluteUri);
             }
 
             // Console.WriteLine("[Client] Reconnecting in 3 seconds...");

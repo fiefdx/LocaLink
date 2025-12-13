@@ -13,7 +13,7 @@ namespace LocaLink;
 public static class Servers
 {
 	public static int DiscoveryPort = 8888;
-    public static int ServerPort = 6000;
+    public static int ServerPort = 9999; // disable firewall, admin cmd run: netsh http add urlacl url=http://+:9999/ user=Everyone
 	public static DiscoveryServer Server = new DiscoveryServer(DiscoveryPort, ServerPort);
 	public static Thread ServerThread = new Thread(() =>
 	{
@@ -22,9 +22,11 @@ public static class Servers
 	public static JsonWebSocketServer WsServer = new JsonWebSocketServer(ServerPort);
 	public static Thread WsServerThread = new Thread(async () =>
 	{
-		WsServer.StartAsync();
+		await WsServer.StartAsync();
 	});
 	public static DiscoveryClient Client = new DiscoveryClient(DiscoveryPort);
+	public static JsonWebSocketClient WsClient = new JsonWebSocketClient("");
+	public static Thread WsClientThread;
 }
 
 public static class MauiProgram

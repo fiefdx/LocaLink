@@ -128,30 +128,6 @@
                         SemanticProperties.Hint="Send the message to another app"
                         Clicked="OnRefreshBtnClicked"
                         HorizontalOptions="Fill" />
-                    <Button
-                        Padding="10,0,10,0"
-                        Margin="0,5,0,5"
-                        FontSize="11"
-                        x:Name="JoinBtn"
-                        Text="Join"
-                        BackgroundColor="#FF4D7EA9"
-                        LineBreakMode="WordWrap"
-                        VerticalOptions="Center"
-                        SemanticProperties.Hint="Send the message to another app"
-                        Clicked="OnJoinBtnClicked"
-                        HorizontalOptions="Fill" />
-                    <Button
-                        Padding="10,0,10,0"
-                        Margin="0,5,2,5"
-                        FontSize="11"
-                        x:Name="LeaveBtn"
-                        Text="Leave"
-                        BackgroundColor="#FF843838"
-                        LineBreakMode="WordWrap"
-                        VerticalOptions="Center"
-                        SemanticProperties.Hint="Send the message to another app"
-                        Clicked="OnSendMessageBtnClicked"
-                        HorizontalOptions="Fill" />
                 </HorizontalStackLayout>
             </VerticalStackLayout>
 
@@ -244,6 +220,7 @@
                 <HorizontalStackLayout
                     Spacing="10">
                     <Button
+                        IsEnabled="False"
                         Padding="10,0,10,0"
                         Margin="5,2.5,2,2.5"
                         FontSize="11"
@@ -253,7 +230,7 @@
                         LineBreakMode="WordWrap"
                         VerticalOptions="Center"
                         SemanticProperties.Hint="Send the message to another app"
-                        Clicked="OnSendMessageBtnClicked"
+                        Clicked="OnLeaveBtnClicked"
                         HorizontalOptions="Fill" />
                     <StackLayout
                         VerticalOptions="Center">
@@ -263,7 +240,7 @@
                             FontSize="13"
                             MaxLines="1" 
                             LineBreakMode="TailTruncation" />
-                        <Label x:Name="ServerInfo"
+                        <Label x:Name="ServerIPPort"
                             Text=""
                             FontSize="11"
                             TextColor="Gray"
