@@ -237,7 +237,7 @@ public class JsonWebSocketServer
                 string json = Encoding.UTF8.GetString(buffer, 0, result.Count);
                 var msg = JsonSerializer.Deserialize<WsMessage>(json)!;
 
-                Console.WriteLine($"[Server] Received {msg.Type}: {json}");
+                // Console.WriteLine($"[Server] Received {msg.Type}: {json}");
 
                 if (msg.Type == "join")
                 {

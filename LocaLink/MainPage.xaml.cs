@@ -10,7 +10,7 @@ public partial class MainPage : ContentPage
 {
 	private ObservableCollection<WsServerInfo> _serverInfos;
 	private ObservableCollection<WsMessage> _wsMessages;
-	private ObservableCollection<UserInfo> _UserInfos;
+	private ObservableCollection<UserInfo> _userInfos;
 	public ICommand SendCommand { get; }
 
 	public MainPage()
@@ -22,8 +22,8 @@ public partial class MainPage : ContentPage
 		ServersListView.ItemsSource = _serverInfos;
 		_wsMessages = new ObservableCollection<WsMessage>();
 		MessagesListView.ItemsSource = _wsMessages;
-		_UserInfos = new ObservableCollection<UserInfo>();
-		UsersListView.ItemsSource = _UserInfos;
+		_userInfos = new ObservableCollection<UserInfo>();
+		UsersListView.ItemsSource = _userInfos;
 		SendCommand = new Command(OnSendCommand);
 	}
 
@@ -147,10 +147,10 @@ public partial class MainPage : ContentPage
 							msg.Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 							// Console.WriteLine($"Get {msg.Type}: {msg.Data}");
 							_wsMessages.Add(msg);
-							_UserInfos.Clear();
+							_userInfos.Clear();
 							for (int i = 0; i < msg.Users.Count; i += 1)
 							{
-								_UserInfos.Add(msg.Users[i]);
+								_userInfos.Add(msg.Users[i]);
 							}
 							// MessagesListView.ScrollTo(msg, ScrollToPosition.End, true);
 						});
@@ -183,17 +183,28 @@ public partial class MainPage : ContentPage
 		}
 	}
 
-	public void OnLeaveBtnClicked(object sender, EventArgs e)
+	async public void OnLeaveBtnClicked(object sender, EventArgs e)
 	{
-		if (Servers.WsClient != null)
+		bool answer = await DisplayAlert("Leave Server", "Do you want to leave this server?", "Yes", "No");
+		if (answer)
 		{
-			Servers.WsClient.Stop();
-			Console.WriteLine("leave the server.");
-			Servers.WsClient = null;
-			Servers.WsClientThread = null;
-			ServerName.Text = "";
-			ServerIPPort.Text = "";
-			LeaveBtn.IsEnabled = false;
+			Console.WriteLine("User chose Yes.");
+			if (Servers.WsClient != null)
+			{
+				Servers.WsClient.Stop();
+				Servers.WsClient = null;
+				Servers.WsClientThread = null;
+				_wsMessages.Clear();
+				_userInfos.Clear();
+				ServerName.Text = "";
+				ServerIPPort.Text = "";
+				LeaveBtn.IsEnabled = false;
+				Console.WriteLine("leave the server.");
+			}
+		}
+		else
+		{
+			Console.WriteLine("User chose No.");
 		}
 	}
 
