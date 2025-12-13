@@ -92,7 +92,8 @@ public class WsMessage
     public object? Data { get; set; }
     public string? Token { get; set; }
     public string? Name { get; set; }
-    public string? Message { get; set;}
+    public string? Message { get; set; }
+    public string? Time { get; set; }
 }
 
 

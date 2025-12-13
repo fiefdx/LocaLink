@@ -126,6 +126,7 @@ public partial class MainPage : ContentPage
                         Console.WriteLine($"{msg.Type}: {JsonSerializer.Serialize(msg.Data)}");
 						MainThread.BeginInvokeOnMainThread(() =>
 						{
+							msg.Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 							_wsMessages.Add(msg);
 						});
                     }

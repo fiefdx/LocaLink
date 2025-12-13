@@ -160,12 +160,27 @@
                     <DataTemplate x:DataType="local:WsMessage">
                         <ViewCell>
                             <StackLayout Padding="10, 10">
-                                <Label
+                                <HorizontalStackLayout
+                                    Spacing="10">
+                                    <Label
+                                        Text="{Binding Name}"
+                                        TextColor="Blue"
+                                        FontSize="12"
+                                        MaxLines="1" 
+                                        LineBreakMode="TailTruncation" />
+                                    <Label
+                                        Text="{Binding Time}"
+                                        TextColor="#FF01511C"
+                                        FontSize="12"
+                                        MaxLines="1" 
+                                        LineBreakMode="TailTruncation" />
+                                </HorizontalStackLayout>
+                                <!-- <Label
                                     Text="{Binding Name}"
                                     TextColor="Blue"
                                     FontSize="12"
                                     MaxLines="1" 
-                                    LineBreakMode="TailTruncation" />
+                                    LineBreakMode="TailTruncation" /> -->
                                 <Label
                                     Text="{Binding Data}"
                                     FontSize="16"
