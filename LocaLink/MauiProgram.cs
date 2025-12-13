@@ -11,18 +11,19 @@ namespace LocaLink;
 
 public static class Servers
 {
-	public static int discoveryPort = 8888;
-    public static int serverPort = 6000;
-	public static DiscoveryServer Server = new DiscoveryServer(discoveryPort, serverPort);
+	public static int DiscoveryPort = 8888;
+    public static int ServerPort = 6000;
+	public static DiscoveryServer Server = new DiscoveryServer(DiscoveryPort, ServerPort);
 	public static Thread ServerThread = new Thread(() =>
 	{
 		Server.StartAsync().GetAwaiter().GetResult();
 	});
-	public static JsonWebSocketServer WsServer = new JsonWebSocketServer(serverPort);
+	public static JsonWebSocketServer WsServer = new JsonWebSocketServer(ServerPort);
 	public static Thread WsServerThread = new Thread(async () =>
 	{
 		WsServer.StartAsync();
 	});
+	public static DiscoveryClient Client = new DiscoveryClient(DiscoveryPort);
 }
 
 public static class MauiProgram
@@ -37,6 +38,7 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
+		builder.Services.AddSingleton<MainPage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

@@ -69,10 +69,12 @@
             Margin="5,0,0,0"
             StrokeThickness="2"
             x:Name="ServerListBorder">
-            <ListView ItemsSource="{Binding WsMessages}">
+            <ListView
+                x:Name="ServersListView"
+                ItemsSource="{Binding WsServerInfos}">
                 <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="local:WsMessage">
-                        <TextCell Text="{Binding Name}" Detail="{Binding Message}" />
+                    <DataTemplate x:DataType="local:WsServerInfo">
+                        <TextCell Text="{Binding Name}" Detail="{Binding Info}" />
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -100,7 +102,7 @@
                     LineBreakMode="WordWrap"
                     VerticalOptions="Center"
                     SemanticProperties.Hint="Send the message to another app"
-                    Clicked="OnSendMessageBtnClicked"
+                    Clicked="OnRefreshBtnClicked"
                     HorizontalOptions="Fill" />
                 <Button
                     Padding="10,0,10,0"

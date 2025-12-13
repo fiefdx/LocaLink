@@ -77,6 +77,12 @@ public class DiscoveryServer
     }
 }
 
+public class WsServerInfo
+{
+    public string Name { get; set; } = "";
+    public string Info { get; set; } = "";
+}
+
 
 public class WsMessage
 {

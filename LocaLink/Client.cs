@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Net.WebSockets;
 using System.Text.Json;
+using System.Runtime.Serialization;
 
 namespace LocaLink;
 
@@ -47,7 +48,7 @@ public class DiscoveryClient
         return servers;
     }
 
-    public async Task DiscoverAsync()
+    public async Task DiscoverAsync(MainPage page)
     {
         var udp = new UdpClient();
         udp.EnableBroadcast = true;
@@ -116,6 +117,12 @@ public class DiscoveryClient
                 break;
             }
         }
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            page.UpdateServers(servers);
+        });
+        
         // Console.WriteLine("Discovery finished.");
     }
 }
