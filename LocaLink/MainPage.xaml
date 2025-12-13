@@ -4,211 +4,288 @@
              xmlns:local="clr-namespace:LocaLink"
              x:Class="LocaLink.MainPage">
 
-    <Grid BackgroundColor="#FFECECEC">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+    <!-- <VerticalStackLayout Margin="0" BackgroundColor="#FFECECEC"> -->
+        <Grid BackgroundColor="#FFECECEC">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="1.5*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="3*" />
+                <RowDefinition Height="2*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-        <VerticalStackLayout
-            Grid.Row="0"
-            Grid.Column="0"
-            Grid.ColumnSpan="2"
-            Grid.RowSpan="2"
-            Margin="8,0,0,0"
-            HorizontalOptions="Fill"
-            Spacing="5">
-            <Entry x:Name="UserName"
-                Margin="0,6,0,0"
-                TextColor="Gray"
-                PlaceholderColor="Gray"
-                Text=""
-                Placeholder="Enter your name" />
-            <HorizontalStackLayout
-                Spacing="10">
-                <Label x:Name="EnableLocalServerLabel"
-                    Text="Enable Local Server"
+            <VerticalStackLayout
+                Grid.Row="0"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Grid.RowSpan="2"
+                Margin="8,0,0,0"
+                HorizontalOptions="Fill"
+                Spacing="5">
+                <Entry x:Name="UserName"
+                    Margin="0,6,0,0"
                     TextColor="Gray"
-                    VerticalOptions="Center"
-                    FontSize="16" />
-                <Switch x:Name="LocalServerSwitch"
-                        OnColor="Green" 
-                        ThumbColor="White"
-                        Toggled="OnLocalServerSwitchToggled" />
-            </HorizontalStackLayout>
-            <Label x:Name="LocalServerInfoLabel"
+                    PlaceholderColor="Gray"
+                    Text=""
+                    Placeholder="Enter your name" />
+                <HorizontalStackLayout
+                    Spacing="10">
+                    <Label x:Name="EnableLocalServerLabel"
+                        Text="Enable Local Server"
+                        TextColor="Gray"
+                        VerticalOptions="Center"
+                        FontSize="16" />
+                    <Switch x:Name="LocalServerSwitch"
+                            OnColor="Green" 
+                            ThumbColor="White"
+                            Toggled="OnLocalServerSwitchToggled" />
+                </HorizontalStackLayout>
+                <Label x:Name="LocalServerInfoLabel"
+                        Text=""
+                        TextColor="Gray"
+                        VerticalOptions="Center"
+                        FontSize="12" />
+            </VerticalStackLayout>
+
+            <Border
+                Grid.Row="2"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Grid.RowSpan="5"
+                Margin="5,0,0,0"
+                StrokeThickness="2"
+                x:Name="ServerListBorder">
+                <ListView
+                    x:Name="ServersListView"
+                    ItemsSource="{Binding WsServerInfos}"
+                    SelectionMode="Single"
+                    ItemSelected="ServerListSelected">
+                    <ListView.ItemTemplate>
+                        <DataTemplate
+                            x:DataType="local:WsServerInfo">
+                            <ViewCell>
+                                <StackLayout Padding="10, 10">
+                                    <Label
+                                        Text="{Binding Name}"
+                                        TextColor="Black"
+                                        FontSize="12"
+                                        MaxLines="1" 
+                                        LineBreakMode="TailTruncation" />
+                                    <Label
+                                        Text="{Binding Info}"
+                                        FontSize="11"
+                                        TextColor="Gray"
+                                        MaxLines="1" 
+                                        LineBreakMode="TailTruncation" />
+                                </StackLayout>
+                            </ViewCell>
+                            <!-- <TextCell
+                                Text="{Binding Name}"
+                                Detail="{Binding Info}"
+                                TextColor="Black"
+                                DetailColor="Green" /> -->
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Border>
+
+            <VerticalStackLayout
+                Grid.Row="7"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Grid.RowSpan="1"
+                Margin="8,0,0,0"
+                HorizontalOptions="Fill"
+                VerticalOptions="Fill"
+                Spacing="5">
+                
+                <HorizontalStackLayout
+                    Spacing="10">
+                    <Button
+                        Padding="10,0,10,0"
+                        Margin="2,5,0,5"
+                        FontSize="11"
+                        x:Name="RefreshBtn"
+                        Text="Refresh"
+                        BackgroundColor="#FF407B63"
+                        LineBreakMode="WordWrap"
+                        VerticalOptions="Center"
+                        SemanticProperties.Hint="Send the message to another app"
+                        Clicked="OnRefreshBtnClicked"
+                        HorizontalOptions="Fill" />
+                    <Button
+                        Padding="10,0,10,0"
+                        Margin="0,5,0,5"
+                        FontSize="11"
+                        x:Name="JoinBtn"
+                        Text="Join"
+                        BackgroundColor="#FF4D7EA9"
+                        LineBreakMode="WordWrap"
+                        VerticalOptions="Center"
+                        SemanticProperties.Hint="Send the message to another app"
+                        Clicked="OnJoinBtnClicked"
+                        HorizontalOptions="Fill" />
+                    <Button
+                        Padding="10,0,10,0"
+                        Margin="0,5,2,5"
+                        FontSize="11"
+                        x:Name="LeaveBtn"
+                        Text="Leave"
+                        BackgroundColor="#FF843838"
+                        LineBreakMode="WordWrap"
+                        VerticalOptions="Center"
+                        SemanticProperties.Hint="Send the message to another app"
+                        Clicked="OnSendMessageBtnClicked"
+                        HorizontalOptions="Fill" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <!-- <VerticalStackLayout
+                Grid.Row="7"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Grid.RowSpan="1"
+                Margin="8,0,0,0"
+                HorizontalOptions="Fill"
+                VerticalOptions="Fill"
+                Spacing="5">
+                <Label x:Name="SwitchStatusLabel"
+                            Text="Server-192.168.2.3:6000"
+                            TextColor="Gray"
+                            FontSize="16" />
+            </VerticalStackLayout> -->
+
+            <Border
+                Grid.Row="0"
+                Grid.Column="2"
+                Grid.ColumnSpan="6"
+                Grid.RowSpan="7"
+                Margin="5,5,5,0"
+                StrokeThickness="2"
+                x:Name="MessageWindowBorder">
+                <ListView ItemsSource="{Binding WsMessages}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:WsMessage">
+                            <TextCell Text="{Binding Name}" Detail="{Binding Message}" />
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Border>
+
+            <Border
+                Grid.Row="7"
+                Grid.Column="2"
+                Grid.ColumnSpan="5"
+                Grid.RowSpan="1"
+                Margin="5,0,0,3"
+                StrokeThickness="2"
+                x:Name="CiphertextEditorBorder">
+                <Editor
+                    BackgroundColor="White"
+                    x:Name="CiphertextEditor"
+                    Placeholder="Enter your text here" />
+            </Border>
+
+            <Button
+                Grid.Row="7"
+                Grid.Column="7"
+                Grid.ColumnSpan="1"
+                Grid.RowSpan="1"
+                Margin="2,2.5,7,5"
+                FontSize="15"
+                x:Name="SendMessageBtn"
+                Text="Send"
+                BackgroundColor="#FF297E5E"
+                LineBreakMode="WordWrap"
+                VerticalOptions="Fill"
+                SemanticProperties.Hint="Send the message to another app"
+                Clicked="OnSendMessageBtnClicked"
+                HorizontalOptions="Fill" />
+
+            <Border
+                Grid.Row="0"
+                Grid.Column="8"
+                Grid.ColumnSpan="2"
+                Grid.RowSpan="7"
+                Margin="0,5,5,0"
+                StrokeThickness="2"
+                x:Name="UserListBorder">
+                <ListView ItemsSource="{Binding WsMessages}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:WsMessage">
+                            <TextCell Text="{Binding Name}" Detail="{Binding Message}" />
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Border>
+            <Border
+                    Grid.Row="7"
+                    Grid.Column="8"
+                    Grid.ColumnSpan="2"
+                    Grid.RowSpan="1"
+                    Margin="0,0,5,4"
+                    StrokeThickness="2"
+                    x:Name="StatusBarBorder">
+                <HorizontalStackLayout
+                    Spacing="10">
+                    <Button
+                        Padding="10,0,10,0"
+                        Margin="5,2.5,2,2.5"
+                        FontSize="11"
+                        x:Name="LeaveBtn"
+                        Text="Leave"
+                        BackgroundColor="#FF843838"
+                        LineBreakMode="WordWrap"
+                        VerticalOptions="Center"
+                        SemanticProperties.Hint="Send the message to another app"
+                        Clicked="OnSendMessageBtnClicked"
+                        HorizontalOptions="Fill" />
+                    <StackLayout
+                        VerticalOptions="Center">
+                        <Label x:Name="ServerName"
+                            Text=""
+                            TextColor="Black"
+                            FontSize="13"
+                            MaxLines="1" 
+                            LineBreakMode="TailTruncation" />
+                        <Label x:Name="ServerInfo"
+                            Text=""
+                            FontSize="11"
+                            TextColor="Gray"
+                            MaxLines="1" 
+                            LineBreakMode="TailTruncation" />
+                    </StackLayout>
+                </HorizontalStackLayout>
+            </Border>
+        </Grid>
+        <!-- <Border
+                Margin="4,0,4,0"
+                StrokeThickness="2"
+                x:Name="StatusBarBorder">
+            <HorizontalStackLayout
+                Spacing="10" HeightRequest="22">
+                <Label x:Name="StatusBarLabel"
+                    Margin="5,0,0,0"
                     Text=""
                     TextColor="Gray"
                     VerticalOptions="Center"
-                    FontSize="12" />
-        </VerticalStackLayout>
-
-        <Border
-            Grid.Row="2"
-            Grid.Column="0"
-            Grid.ColumnSpan="2"
-            Grid.RowSpan="5"
-            Margin="5,0,0,0"
-            StrokeThickness="2"
-            x:Name="ServerListBorder">
-            <ListView
-                x:Name="ServersListView"
-                ItemsSource="{Binding WsServerInfos}">
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="local:WsServerInfo">
-                        <TextCell Text="{Binding Name}" Detail="{Binding Info}" />
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </Border>
-
-        <VerticalStackLayout
-            Grid.Row="7"
-            Grid.Column="0"
-            Grid.ColumnSpan="2"
-            Grid.RowSpan="1"
-            Margin="8,0,0,0"
-            HorizontalOptions="Fill"
-            VerticalOptions="Fill"
-            Spacing="5">
-            
-            <HorizontalStackLayout
-                Spacing="10">
-                <Button
-                    Padding="10,0,10,0"
-                    Margin="2,5,0,5"
-                    FontSize="11"
-                    x:Name="RefreshBtn"
-                    Text="Refresh"
-                    BackgroundColor="#FF407B63"
-                    LineBreakMode="WordWrap"
-                    VerticalOptions="Center"
-                    SemanticProperties.Hint="Send the message to another app"
-                    Clicked="OnRefreshBtnClicked"
-                    HorizontalOptions="Fill" />
-                <Button
-                    Padding="10,0,10,0"
-                    Margin="0,5,0,5"
-                    FontSize="11"
-                    x:Name="JoinBtn"
-                    Text="Join"
-                    BackgroundColor="#FF4D7EA9"
-                    LineBreakMode="WordWrap"
-                    VerticalOptions="Center"
-                    SemanticProperties.Hint="Send the message to another app"
-                    Clicked="OnSendMessageBtnClicked"
-                    HorizontalOptions="Fill" />
-                <Button
-                    Padding="10,0,10,0"
-                    Margin="0,5,2,5"
-                    FontSize="11"
-                    x:Name="LeaveBtn"
-                    Text="Leave"
-                    BackgroundColor="#FF843838"
-                    LineBreakMode="WordWrap"
-                    VerticalOptions="Center"
-                    SemanticProperties.Hint="Send the message to another app"
-                    Clicked="OnSendMessageBtnClicked"
-                    HorizontalOptions="Fill" />
+                    FontSize="15" />
             </HorizontalStackLayout>
-        </VerticalStackLayout>
-
-        <!-- <VerticalStackLayout
-            Grid.Row="7"
-            Grid.Column="0"
-            Grid.ColumnSpan="2"
-            Grid.RowSpan="1"
-            Margin="8,0,0,0"
-            HorizontalOptions="Fill"
-            VerticalOptions="Fill"
-            Spacing="5">
-            <Label x:Name="SwitchStatusLabel"
-                        Text="Server-192.168.2.3:6000"
-                        TextColor="Gray"
-                        FontSize="16" />
-        </VerticalStackLayout> -->
-
-        <Border
-            Grid.Row="0"
-            Grid.Column="2"
-            Grid.ColumnSpan="6"
-            Grid.RowSpan="7"
-            Margin="5,5,5,0"
-            StrokeThickness="2"
-            x:Name="MessageWindowBorder">
-            <ListView ItemsSource="{Binding WsMessages}">
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="local:WsMessage">
-                        <TextCell Text="{Binding Name}" Detail="{Binding Message}" />
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
         </Border>
-
-        <Border
-            Grid.Row="7"
-            Grid.Column="2"
-            Grid.ColumnSpan="5"
-            Grid.RowSpan="1"
-            Margin="5,0,0,3"
-            StrokeThickness="2"
-            x:Name="CiphertextEditorBorder">
-            <Editor
-                BackgroundColor="White"
-                x:Name="CiphertextEditor"
-                Placeholder="Enter your text here" />
-        </Border>
-
-        <Button
-            Grid.Row="7"
-            Grid.Column="7"
-            Grid.ColumnSpan="1"
-            Grid.RowSpan="1"
-            Margin="2,2.5,7,5"
-            FontSize="15"
-            x:Name="SendMessageBtn"
-            Text="Send"
-            BackgroundColor="#FF297E5E"
-            LineBreakMode="WordWrap"
-            VerticalOptions="Fill"
-            SemanticProperties.Hint="Send the message to another app"
-            Clicked="OnSendMessageBtnClicked"
-            HorizontalOptions="Fill" />
-
-        <Border
-            Grid.Row="0"
-            Grid.Column="8"
-            Grid.ColumnSpan="2"
-            Grid.RowSpan="8"
-            Margin="0,5,5,4"
-            StrokeThickness="2"
-            x:Name="UserListBorder">
-            <ListView ItemsSource="{Binding WsMessages}">
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="local:WsMessage">
-                        <TextCell Text="{Binding Name}" Detail="{Binding Message}" />
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
-        </Border>
-    </Grid>
-
+    </VerticalStackLayout> -->
 </ContentPage>

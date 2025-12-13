@@ -25,10 +25,12 @@ public partial class MainPage : ContentPage
 	protected override void OnAppearing()
 	{
 		base.OnAppearing();
-		this.Window.MinimumHeight = 600;
-		this.Window.MinimumWidth = 1040;
-		this.Window.Height = 600;
-		this.Window.Width = 1040;
+		this.Window.MinimumHeight = 720;
+		this.Window.MinimumWidth = 1300;
+		this.Window.MaximumHeight = 720;
+		this.Window.MaximumWidth = 1300;
+		this.Window.Height = 720;
+		this.Window.Width = 1300;
 	}
 
 	public void OnLocalServerSwitchToggled(object sender, ToggledEventArgs e)
@@ -83,15 +85,27 @@ public partial class MainPage : ContentPage
 		});
 		clientThread.IsBackground = true;
 		clientThread.Start();
-		// clientThread.Join();
-		// var servers = Servers.Client.GetDiscoveredServers();
-		// foreach (var s in servers)
-		// {
-		// 	Console.WriteLine($"{s.Name} => {s.IP}:{s.Port}");
-		// 	_serverInfos.Add(new WsServerInfo { Name = s.Name, Info = $"{s.IP}:{s.Port}" });
-		// }
-		// RefreshBtn.Text = "Refresh";
-		// RefreshBtn.IsEnabled = true;
+	}
+
+	public void ServerListSelected(object sender, SelectedItemChangedEventArgs e)
+	{
+		if (e.SelectedItem != null)
+		{
+			// Cast the selected item to your model type
+			var ServerInfo = (WsServerInfo)e.SelectedItem;
+			
+
+			// Perform actions with the selected item, e.g., display an alert
+			DisplayAlert("Server Selected", $"You selected: {ServerInfo.Name}", "OK");
+
+			// Optional: Deselect the item after action (prevents the event from firing repeatedly if re-selected)
+			((ListView)sender).SelectedItem = null;
+		}
+	}
+
+	public void OnJoinBtnClicked(object sender, EventArgs e)
+	{
+		
 	}
 
 	public void OnSendMessageBtnClicked(object sender, EventArgs e)
