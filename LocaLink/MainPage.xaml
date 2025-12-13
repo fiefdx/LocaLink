@@ -40,23 +40,25 @@
                 Margin="0,6,0,0"
                 TextColor="Gray"
                 PlaceholderColor="Gray"
+                Text=""
                 Placeholder="Enter your name" />
             <HorizontalStackLayout
                 Spacing="10">
-                <Label x:Name="StartLocalServerLabel"
-                    Text="Start Local Server"
+                <Label x:Name="EnableLocalServerLabel"
+                    Text="Enable Local Server"
                     TextColor="Gray"
                     VerticalOptions="Center"
                     FontSize="16" />
                 <Switch x:Name="LocalServerSwitch"
                         OnColor="Green" 
-                        ThumbColor="White" />
+                        ThumbColor="White"
+                        Toggled="OnLocalServerSwitchToggled" />
             </HorizontalStackLayout>
             <Label x:Name="LocalServerInfoLabel"
-                    Text="Server-192.168.2.3:6000"
+                    Text=""
                     TextColor="Gray"
                     VerticalOptions="Center"
-                    FontSize="16" />
+                    FontSize="12" />
         </VerticalStackLayout>
 
         <Border
@@ -98,7 +100,7 @@
                     LineBreakMode="WordWrap"
                     VerticalOptions="Center"
                     SemanticProperties.Hint="Send the message to another app"
-                    Clicked="OnRefreshBtnClicked"
+                    Clicked="OnSendMessageBtnClicked"
                     HorizontalOptions="Fill" />
                 <Button
                     Padding="10,0,10,0"
@@ -110,7 +112,7 @@
                     LineBreakMode="WordWrap"
                     VerticalOptions="Center"
                     SemanticProperties.Hint="Send the message to another app"
-                    Clicked="OnJoinBtnClicked"
+                    Clicked="OnSendMessageBtnClicked"
                     HorizontalOptions="Fill" />
                 <Button
                     Padding="10,0,10,0"
@@ -122,7 +124,7 @@
                     LineBreakMode="WordWrap"
                     VerticalOptions="Center"
                     SemanticProperties.Hint="Send the message to another app"
-                    Clicked="OnLeaveBtnClicked"
+                    Clicked="OnSendMessageBtnClicked"
                     HorizontalOptions="Fill" />
             </HorizontalStackLayout>
         </VerticalStackLayout>

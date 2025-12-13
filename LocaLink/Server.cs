@@ -10,8 +10,8 @@ namespace LocaLink;
 public class DiscoveryServer
 {
     private readonly UdpClient udp;
-    private string Name = "Unknown";
-    private int Port = 6000;
+    public string Name { get; set; } = "Unknown";
+    public int Port { get; private set; } = 6000;
     public bool Running = false;
 
     public DiscoveryServer(int listenPort, int port = 6000)
