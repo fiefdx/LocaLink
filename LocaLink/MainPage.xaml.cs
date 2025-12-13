@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.Json;
+using System.Windows.Input;
 
 namespace LocaLink;
 
@@ -14,6 +15,8 @@ public class ChatItem
 public partial class MainPage : ContentPage
 {
 	private ObservableCollection<WsServerInfo> _serverInfos;
+	private ObservableCollection<WsMessage> _wsMessages;
+	public ICommand SendCommand { get; }
 
 	public MainPage()
 	{
@@ -22,6 +25,9 @@ public partial class MainPage : ContentPage
 		InitializeComponent();
 		_serverInfos = new ObservableCollection<WsServerInfo>();
 		ServersListView.ItemsSource = _serverInfos;
+		_wsMessages = new ObservableCollection<WsMessage>();
+		MessagesListView.ItemsSource = _wsMessages;
+		SendCommand = new Command(OnSendCommand);
 	}
 
 	protected override void OnAppearing()
@@ -118,6 +124,10 @@ public partial class MainPage : ContentPage
                     if (msg.Type == "chat")
                     {
                         Console.WriteLine($"{msg.Type}: {JsonSerializer.Serialize(msg.Data)}");
+						MainThread.BeginInvokeOnMainThread(() =>
+						{
+							_wsMessages.Add(msg);
+						});
                     }
                     else if (msg.Type == "join")
                     {
@@ -128,6 +138,7 @@ public partial class MainPage : ContentPage
 							ServerName.Text = ServerInfo.Name;
 							ServerIPPort.Text = ServerInfo.Info;
 							LeaveBtn.IsEnabled = true;
+							_wsMessages.Clear();
 						});
                     }
                 };
@@ -172,8 +183,32 @@ public partial class MainPage : ContentPage
 		}
 	}
 
+	public void OnSendCommand()
+	{
+		if (Servers.WsClient != null)
+		{
+			var name = "Unknown";
+			if (UserName.Text != "")
+			{
+				name = UserName.Text;
+			}
+			var message = MessageEditor.Text;
+			var msg = new WsMessage
+			{
+				Type = "chat",
+				Data = message,
+				Token = Servers.WsClient.GetToken(),
+				Name = name
+			};
+			Servers.WsClient.SendAsync(msg);
+			MessageEditor.Text = "";
+			Console.WriteLine($"Send {message}");
+		}
+		Console.WriteLine("Send Message");
+	}
+
 	public void OnSendMessageBtnClicked(object sender, EventArgs e)
 	{
-
+		OnSendCommand();
 	}
 }

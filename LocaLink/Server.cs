@@ -204,75 +204,121 @@ public class JsonWebSocketServer
 
         var buffer = new byte[8192];
 
-        while (socket.State == WebSocketState.Open && Running)
+        try
         {
-            var result = await socket.ReceiveAsync(buffer, CancellationToken.None);
-
-            if (result.MessageType == WebSocketMessageType.Close)
-                break;
-
-            string json = Encoding.UTF8.GetString(buffer, 0, result.Count);
-            var msg = JsonSerializer.Deserialize<WsMessage>(json)!;
-
-            // Console.WriteLine($"[Server] Received {msg.Type}: {json}");
-
-            // Example: handle ping
-            if (msg.Type == "ping")
+            while (socket.State == WebSocketState.Open && Running)
             {
-                await SendJsonAsync(socket, new WsMessage
-                {
-                    Type = "pong",
-                    Data = DateTime.UtcNow.ToString()
-                });
-            }
+                var result = await socket.ReceiveAsync(buffer, CancellationToken.None);
 
-            if (msg.Type == "join")
-            {
-                // Console.Write($"\bUser joining: {msg.Name}, from {clientIp}\n>");
-                var isLocal = IsLocalConnection(clientIp.ToString());
-                // Console.Write($"\bUser joining: {msg.Name}, from {clientIp} (Local Manager: {isLocal})\n>");
-                var token = GenerateToken();
-                if (isLocal)
+                if (result.MessageType == WebSocketMessageType.Close)
+                    break;
+
+                string json = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                var msg = JsonSerializer.Deserialize<WsMessage>(json)!;
+
+                Console.WriteLine($"[Server] Received {msg.Type}: {json}");
+
+                // Example: handle ping
+                if (msg.Type == "ping")
                 {
-                    ManagerToken = token;
-                    // Console.WriteLine("Assigned as Manager.");
+                    await SendJsonAsync(new WsMessage
+                    {
+                        Type = "pong",
+                        Data = DateTime.UtcNow.ToString()
+                    });
                 }
-                users.Add(new User(msg.Name?.ToString() ?? "Guest", token, socket));
-                // Console.WriteLine($"User joined: {msg.Name}, assigned token: {token}");
-                await SendJsonAsync(socket, new WsMessage
-                {
-                    Type = "join",
-                    Data = DateTime.UtcNow.ToString(),
-                    Token = token
-                });
-            }
 
-            // Example: broadcast
-            if (msg.Type == "chat")
-            {
-                await SendJsonAsync(socket, new WsMessage
+                if (msg.Type == "join")
                 {
-                    Type = "chat",
-                    Data = msg.Data
-                });
+                    // Console.Write($"\bUser joining: {msg.Name}, from {clientIp}\n>");
+                    var isLocal = IsLocalConnection(clientIp.ToString());
+                    // Console.Write($"\bUser joining: {msg.Name}, from {clientIp} (Local Manager: {isLocal})\n>");
+                    var token = GenerateToken();
+                    if (isLocal)
+                    {
+                        ManagerToken = token;
+                        // Console.WriteLine("Assigned as Manager.");
+                    }
+                    users.Add(new User(msg.Name?.ToString() ?? "Guest", token, socket));
+                    // Console.WriteLine($"User joined: {msg.Name}, assigned token: {token}");
+                    await SendJsonAsync(new WsMessage
+                    {
+                        Type = "join",
+                        Data = DateTime.UtcNow.ToString(),
+                        Token = token
+                    });
+                }
+
+                // Example: broadcast
+                if (msg.Type == "chat")
+                {
+                    await SendJsonAsync(msg);
+                }
             }
+        }
+        catch (WebSocketException ex)
+        {
+            Console.WriteLine($"[Server] WebSocket error: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Server] Client error: {ex}");
+        }
+        finally
+        {
+            await HandleClientDisconnectedAsync(socket);
         }
 
         await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
         // Console.WriteLine("Client disconnected.");
     }
 
-    private async Task SendJsonAsync(WebSocket socket, WsMessage msg)
+    private async Task HandleClientDisconnectedAsync(WebSocket socket)
+    {
+        User? user = null;
+        for (int i = 0; i < users.Count; i += 1)
+        {
+            if (users[i].Socket == socket)
+            {
+                user = users[i];
+                break;
+            }
+        }
+        if (user != null)
+        {
+            users.Remove(user);
+
+            Console.WriteLine($"[Server] User disconnected: {user.Name}");
+
+            // Optional: notify others
+            await SendJsonAsync(new WsMessage
+            {
+                Type = "leave",
+                Name = user.Name,
+                Data = DateTime.UtcNow.ToString()
+            });
+        }
+
+        if (socket.State != WebSocketState.Closed)
+        {
+            await socket.CloseAsync(
+                WebSocketCloseStatus.NormalClosure,
+                "Connection closed",
+                CancellationToken.None);
+        }
+    }
+
+    private async Task SendJsonAsync(WsMessage msg)
     {
         string json = JsonSerializer.Serialize(msg);
         byte[] bytes = Encoding.UTF8.GetBytes(json);
         for (int i = 0; i < users.Count; i += 1)
         {
-            if (msg.Type == "chat" && users[i].Socket != socket && socket.State == WebSocketState.Open)
+            if (msg.Type == "chat") // && socket.State == WebSocketState.Open) // users[i].Socket != socket &&
             {
                 await users[i].Socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
             }
-            else if (msg.Type == "join" && users[i].Socket == socket && socket.State == WebSocketState.Open)
+            else if (msg.Type == "join") // && socket.State == WebSocketState.Open)
             {
                 await users[i].Socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
             }
