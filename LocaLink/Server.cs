@@ -95,6 +95,13 @@ public class WsMessage
     public string? Message { get; set; }
     public string? Time { get; set; }
     public string? Notification { get; set; } = "";
+    public List<UserInfo> Users { get; set; } = [];
+}
+
+public class UserInfo
+{
+    public string Name { get; set; } = "";
+    public string Time { get; set; } = "";
 }
 
 
@@ -104,13 +111,15 @@ public class User
     private string Token { get; set; } = "";
     public string IP { get; set; } = "";
     public int Port { get; set; } = 0;
+    public string Time { get; set; } = "";
     public WebSocket Socket { get; set; }
 
-    public User(string name, string token, WebSocket socket)
+    public User(string name, string token, WebSocket socket, string time)
     {
         Name = name;
         Token = token;
         Socket = socket;
+        Time = time;
     }
 
     public string GetToken()
@@ -131,6 +140,16 @@ public class JsonWebSocketServer
     public JsonWebSocketServer(int port)
     {
         Port = port;
+    }
+
+    public List<UserInfo> GetUsers()
+    {
+        List<UserInfo> result = [];
+        for (int i = 0; i < users.Count; i += 1)
+        {
+            result.Add(new UserInfo {Name = users[i].Name, Time = users[i].Time});
+        }
+        return result;
     }
 
     public string GenerateToken()
@@ -231,7 +250,7 @@ public class JsonWebSocketServer
                         ManagerToken = token;
                         // Console.WriteLine("Assigned as Manager.");
                     }
-                    users.Add(new User(msg.Name?.ToString() ?? "Unknown", token, socket));
+                    users.Add(new User(msg.Name?.ToString() ?? "Unknown", token, socket, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
                     // Console.WriteLine($"User joined: {msg.Name}, assigned token: {token}");
                     await SendJsonAsync(socket, new WsMessage
                     {
@@ -244,6 +263,7 @@ public class JsonWebSocketServer
                         Type = "notification",
                         Name = "System",
                         Notification = $"<System: {msg.Name} join this server!>",
+                        Users = GetUsers()
                     });
                 }
 
@@ -293,6 +313,7 @@ public class JsonWebSocketServer
                 Type = "notification",
                 Name = "System",
                 Notification = $"<System: {user.Name} leave this server!>",
+                Users = GetUsers()
             });
         }
 

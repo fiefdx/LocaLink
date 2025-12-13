@@ -10,6 +10,7 @@ public partial class MainPage : ContentPage
 {
 	private ObservableCollection<WsServerInfo> _serverInfos;
 	private ObservableCollection<WsMessage> _wsMessages;
+	private ObservableCollection<UserInfo> _UserInfos;
 	public ICommand SendCommand { get; }
 
 	public MainPage()
@@ -21,6 +22,8 @@ public partial class MainPage : ContentPage
 		ServersListView.ItemsSource = _serverInfos;
 		_wsMessages = new ObservableCollection<WsMessage>();
 		MessagesListView.ItemsSource = _wsMessages;
+		_UserInfos = new ObservableCollection<UserInfo>();
+		UsersListView.ItemsSource = _UserInfos;
 		SendCommand = new Command(OnSendCommand);
 	}
 
@@ -144,6 +147,11 @@ public partial class MainPage : ContentPage
 							msg.Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 							// Console.WriteLine($"Get {msg.Type}: {msg.Data}");
 							_wsMessages.Add(msg);
+							_UserInfos.Clear();
+							for (int i = 0; i < msg.Users.Count; i += 1)
+							{
+								_UserInfos.Add(msg.Users[i]);
+							}
 							// MessagesListView.ScrollTo(msg, ScrollToPosition.End, true);
 						});
                     }
