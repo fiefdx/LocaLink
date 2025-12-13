@@ -156,6 +156,8 @@
             x:Name="MessageWindowBorder">
             <controls:AutoScrollListView
                 x:Name="MessagesListView"
+                BackgroundColor="White"
+                SelectionMode="None"
                 ItemsSource="{Binding WsMessages}">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="local:WsMessage">
