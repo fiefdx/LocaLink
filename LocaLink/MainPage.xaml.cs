@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text.Json;
 using System.Windows.Input;
+using Microsoft.Maui.Platform;
 
 namespace LocaLink;
 
@@ -40,6 +41,11 @@ public partial class MainPage : ContentPage
             InterfacePicker.SelectedIndex = 0;
             _currentDevice = _devicesList[0];
         }
+    }
+
+    public void OnTestClicked(object sender, EventArgs e)
+    {
+        Console.WriteLine("test clicked");
     }
 
     protected override void OnAppearing()
@@ -241,13 +247,13 @@ public partial class MainPage : ContentPage
                 Servers.WsClient.Stop();
                 Servers.WsClient = null;
                 Servers.WsClientThread = null;
-                _wsMessages.Clear();
-                _userInfos.Clear();
-                ServerName.Text = "";
-                ServerIPPort.Text = "";
-                LeaveBtn.IsEnabled = false;
-                Console.WriteLine("leave the server.");
             }
+            _wsMessages.Clear();
+            _userInfos.Clear();
+            ServerName.Text = "";
+            ServerIPPort.Text = "";
+            LeaveBtn.IsEnabled = false;
+            Console.WriteLine("leave the server.");
         }
         else
         {

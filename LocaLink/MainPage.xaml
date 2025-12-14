@@ -236,11 +236,7 @@
             VerticalOptions="Fill"
             SemanticProperties.Hint="Send the message to another app"
             Clicked="OnSendMessageBtnClicked"
-            Command="{Binding SendCommand}"
             HorizontalOptions="Fill">
-            <!-- <Button.KeyboardAccelerators>
-                <KeyboardAccelerator Modifiers="Ctrl" Key="Enter" />
-            </Button.KeyboardAccelerators> -->
         </Button>
 
         <Border
