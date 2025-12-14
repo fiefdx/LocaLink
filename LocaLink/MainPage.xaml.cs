@@ -179,6 +179,14 @@ public partial class MainPage : ContentPage
                             {
                                 _userInfos.Add(msg.Users[i]);
                             }
+                            if (msg.Notification == "<System: server closed>")
+                            {
+                                if (Servers.WsClient != null)
+                                {
+                                    Servers.WsClient.Stop();
+                                    Servers.WsClient = null;
+                                }
+                            }
                             // MessagesListView.ScrollTo(msg, ScrollToPosition.End, true);
                         });
                     }
@@ -247,9 +255,9 @@ public partial class MainPage : ContentPage
         }
     }
 
-    public void OnSendCommand()
+    async public void OnSendCommand()
     {
-        if (Servers.WsClient != null)
+        if (Servers.WsClient != null && Servers.WsClient.Opened())
         {
             var name = "Unknown";
             if (UserName.Text != "")
@@ -264,9 +272,12 @@ public partial class MainPage : ContentPage
                 Token = Servers.WsClient.GetToken(),
                 Name = name
             };
-            Servers.WsClient.SendAsync(msg);
+            await Servers.WsClient.SendAsync(msg);
             MessageEditor.Text = "";
             Console.WriteLine($"Send {message}");
+        } else
+        {
+            await DisplayAlert("Warning", "Not connected to a server!", "OK");
         }
         Console.WriteLine("Send Message");
     }

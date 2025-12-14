@@ -251,6 +251,12 @@ public class JsonWebSocketClient
 
     public event Action<WsMessage>? OnMessage;
 
+    public bool Opened()
+    {
+        Console.WriteLine($"socket.State: {socket.State}");
+        return socket.State == WebSocketState.Open;
+    }
+
     public void SetToken(string token)
     {
         Token = token;

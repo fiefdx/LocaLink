@@ -162,6 +162,19 @@ public class JsonWebSocketServer
         return result;
     }
 
+    public User GetUser(string token)
+    {
+        User? result = null;
+        for (int i = 0; i < users.Count; i += 1)
+        {
+            if (users[i].GetToken() == token)
+            {
+                return users[i];
+            }
+        }
+        return result;
+    }
+
     public string GenerateToken()
     {
         TokenCounter++;
@@ -173,9 +186,20 @@ public class JsonWebSocketServer
         Running = true;
     }
 
-    public void Disable()
+    async public void Disable()
     {
         Running = false;
+        await SendJsonAsyncBroadcast(new WsMessage
+        {
+            Type = "notification",
+            Name = "System",
+            Notification = $"<System: server closed>"
+        });
+        for (int i = 0; i < users.Count; i++)
+        {
+            await users[i].Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
+        }
+        users.Clear();
     }
 
     public bool IsLocalConnection(string ip)
@@ -217,11 +241,9 @@ public class JsonWebSocketServer
             }
             else
             {
-                // Console.WriteLine("websocket server not running ...");
                 await Task.Delay(100);
                 continue;
             }
-            await Task.Delay(500);
         }
     }
 
@@ -249,38 +271,42 @@ public class JsonWebSocketServer
 
                 Console.WriteLine($"[Server] Received {msg.Type}: {json}");
 
-                if (msg.Type == "join")
+                if (Running)
                 {
-                    // Console.Write($"\bUser joining: {msg.Name}, from {clientIp}\n>");
-                    var isLocal = IsLocalConnection(clientIp.ToString());
-                    // Console.Write($"\bUser joining: {msg.Name}, from {clientIp} (Local Manager: {isLocal})\n>");
-                    var token = GenerateToken();
-                    if (isLocal)
+                    if (msg.Type == "join")
                     {
-                        ManagerToken = token;
-                        // Console.WriteLine("Assigned as Manager.");
+                        // Console.Write($"\bUser joining: {msg.Name}, from {clientIp}\n>");
+                        var isLocal = IsLocalConnection(clientIp.ToString());
+                        // Console.Write($"\bUser joining: {msg.Name}, from {clientIp} (Local Manager: {isLocal})\n>");
+                        var token = GenerateToken();
+                        if (isLocal)
+                        {
+                            ManagerToken = token;
+                            // Console.WriteLine("Assigned as Manager.");
+                        }
+                        users.Add(new User(msg.Name?.ToString() ?? "Unknown", token, socket, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
+                        // Console.WriteLine($"User joined: {msg.Name}, assigned token: {token}");
+                        await SendJsonAsync(socket, new WsMessage
+                        {
+                            Type = "join",
+                            Data = DateTime.UtcNow.ToString(),
+                            Token = token
+                        });
+                        await SendJsonAsyncBroadcast(new WsMessage
+                        {
+                            Type = "notification",
+                            Name = "System",
+                            Notification = $"<System: {msg.Name} join this server>",
+                            Users = GetUsers()
+                        });
                     }
-                    users.Add(new User(msg.Name?.ToString() ?? "Unknown", token, socket, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
-                    // Console.WriteLine($"User joined: {msg.Name}, assigned token: {token}");
-                    await SendJsonAsync(socket, new WsMessage
+                    else if (msg.Type == "chat")
                     {
-                        Type = "join",
-                        Data = DateTime.UtcNow.ToString(),
-                        Token = token
-                    });
-                    await SendJsonAsyncBroadcast(new WsMessage
-                    {
-                        Type = "notification",
-                        Name = "System",
-                        Notification = $"<System: {msg.Name} join this server>",
-                        Users = GetUsers()
-                    });
-                }
-
-                // Example: broadcast
-                if (msg.Type == "chat")
-                {
-                    await SendJsonAsyncBroadcast(msg);
+                        if (GetUser(msg.Token) != null)
+                        {
+                            await SendJsonAsyncBroadcast(msg);
+                        }
+                    }
                 }
             }
         }
@@ -296,9 +322,6 @@ public class JsonWebSocketServer
         {
             await HandleClientDisconnectedAsync(socket);
         }
-
-        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
-        // Console.WriteLine("Client disconnected.");
     }
 
     private async Task HandleClientDisconnectedAsync(WebSocket socket)
@@ -378,4 +401,3 @@ public class JsonWebSocketServer
         // await socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
     }
 }
-
