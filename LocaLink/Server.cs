@@ -9,7 +9,7 @@ namespace LocaLink;
 
 public class DiscoveryServer
 {
-    private readonly UdpClient udp;
+    private UdpClient udp;
     public string Name { get; set; } = "Unknown";
     public int Port { get; private set; } = 6000;
     public bool Running = false;
@@ -52,20 +52,30 @@ public class DiscoveryServer
                 //     // Console.WriteLine("Timeout waiting for discovery requests.");
                 //     continue;
                 // }
-
-                var result = await udp.ReceiveAsync();
-                string msg = Encoding.UTF8.GetString(result.Buffer);
-
-                // Console.WriteLine($"Ping from {result.RemoteEndPoint}: {msg}");
-
-                if (msg == "DISCOVER_REQUEST" && Running)
+                try
                 {
-                    string reply = $"DISCOVER_RESPONSE_LOCALINK;PORT={Port};NAME={Name}";
-                    byte[] data = Encoding.UTF8.GetBytes(reply);
+                    var result = await udp.ReceiveAsync();
+                    string msg = Encoding.UTF8.GetString(result.Buffer);
 
-                    // Respond directly to the sender (unicast)
-                    await udp.SendAsync(data, data.Length, result.RemoteEndPoint);
-                    // Console.WriteLine("Sent discovery response.");
+                    // Console.WriteLine($"Ping from {result.RemoteEndPoint}: {msg}");
+
+                    if (msg == "DISCOVER_REQUEST" && Running)
+                    {
+                        string reply = $"DISCOVER_RESPONSE_LOCALINK;PORT={Port};NAME={Name}";
+                        byte[] data = Encoding.UTF8.GetBytes(reply);
+
+                        // Respond directly to the sender (unicast)
+                        await udp.SendAsync(data, data.Length, result.RemoteEndPoint);
+                        // Console.WriteLine("Sent discovery response.");
+                    }
+                }
+                catch (SocketException ex)
+                {
+                    Console.WriteLine($"Socket error: {ex.Message}");
+                }
+                catch (ObjectDisposedException)
+                {
+                    udp = new UdpClient(Port);
                 }
             }
             else
@@ -237,7 +247,7 @@ public class JsonWebSocketServer
                 string json = Encoding.UTF8.GetString(buffer, 0, result.Count);
                 var msg = JsonSerializer.Deserialize<WsMessage>(json)!;
 
-                // Console.WriteLine($"[Server] Received {msg.Type}: {json}");
+                Console.WriteLine($"[Server] Received {msg.Type}: {json}");
 
                 if (msg.Type == "join")
                 {

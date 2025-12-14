@@ -11,6 +11,9 @@ public partial class MainPage : ContentPage
     private ObservableCollection<WsServerInfo> _serverInfos;
     private ObservableCollection<WsMessage> _wsMessages;
     private ObservableCollection<UserInfo> _userInfos;
+    private List<string> _devicesList = [];
+    private List<IPDevice> _networkDevices;
+    private string _currentDevice = "";
     public ICommand SendCommand { get; }
 
     public MainPage()
@@ -25,6 +28,18 @@ public partial class MainPage : ContentPage
         _userInfos = new ObservableCollection<UserInfo>();
         UsersListView.ItemsSource = _userInfos;
         SendCommand = new Command(OnSendCommand);
+        _networkDevices = NetworkDeviceHelper.AvailableIPv4AddressesAndDeviceNames();
+        for (int i = 0; i < _networkDevices.Count; i++)
+        {
+            _devicesList.Add(_networkDevices[i].Device);
+        }
+        InterfacePicker.ItemsSource = _devicesList;
+        InterfacePicker.SelectedIndexChanged += InterfaceSelectedChanged;
+        if (_devicesList.Count > 0)
+        {
+            InterfacePicker.SelectedIndex = 0;
+            _currentDevice = _devicesList[0];
+        }
     }
 
     protected override void OnAppearing()
@@ -54,7 +69,12 @@ public partial class MainPage : ContentPage
             Console.WriteLine("Local Server is ON");
             Servers.Server.Enable();
             Servers.WsServer.Enable();
-            LocalServerInfoLabel.Text = $"{Servers.Server.Name}:{Servers.Server.Port}";
+            string IP = "*.*.*.*";
+            if (_currentDevice != "")
+            {
+                IP = NetworkDeviceHelper.GetIPv4Address(_currentDevice);
+            }
+            LocalServerInfoLabel.Text = $"{Servers.Server.Name}:{IP}:{Servers.Server.Port}";
             Console.WriteLine($"{Servers.Server.Name}, {Servers.Server.Running}, {Servers.WsServer.Running}");
         }
         else
@@ -81,15 +101,22 @@ public partial class MainPage : ContentPage
     public void OnRefreshBtnClicked(object sender, EventArgs e)
     {
         Console.WriteLine("Scanning for servers...");
-        _serverInfos.Clear();
-        RefreshBtn.Text = "Waiting";
-        RefreshBtn.IsEnabled = false;
-        var clientThread = new Thread(async () =>
+        if (_currentDevice != "")
         {
-            Servers.Client.DiscoverAsync(this).GetAwaiter().GetResult();
-        });
-        clientThread.IsBackground = true;
-        clientThread.Start();
+            _serverInfos.Clear();
+            RefreshBtn.Text = "Waiting";
+            RefreshBtn.IsEnabled = false;
+            var clientThread = new Thread(async () =>
+            {
+                Servers.Client.DiscoverAsync(this, _currentDevice).GetAwaiter().GetResult();
+            });
+            clientThread.IsBackground = true;
+            clientThread.Start();
+        }
+        else
+        {
+            Console.WriteLine("No available network device selected!");
+        }
     }
 
     async public void ServerListSelected(object sender, SelectedItemChangedEventArgs e)
@@ -180,6 +207,18 @@ public partial class MainPage : ContentPage
 
             // Optional: Deselect the item after action (prevents the event from firing repeatedly if re-selected)
             ((ListView)sender).SelectedItem = null;
+        }
+    }
+
+    public void InterfaceSelectedChanged(object sender, EventArgs e)
+    {
+        var picker = (Picker)sender;
+        int selectedIndex = picker.SelectedIndex;
+        if (selectedIndex != -1)
+        {
+            var IP = NetworkDeviceHelper.GetIPv4Address(_devicesList[selectedIndex]);
+            _currentDevice = _devicesList[selectedIndex];
+            Console.WriteLine($"Seleted Device: {_currentDevice}, IP: {IP}");
         }
     }
 

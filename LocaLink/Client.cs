@@ -4,8 +4,118 @@ using System.Text;
 using System.Net.WebSockets;
 using System.Text.Json;
 using System.Runtime.Serialization;
+using System.Net.NetworkInformation;
 
 namespace LocaLink;
+
+
+public class IPDevice
+{
+    public string Device { get; set; } = "";
+    public string IP { get; set; } = "";
+}
+
+public class NetworkDeviceHelper
+{
+    public static void DisplayNetworkInterfaces()
+    {
+        // Get all network interfaces on the local computer
+        NetworkInterface[] adapters = NetworkInterface.GetAllNetworkInterfaces();
+        Console.WriteLine("Network Interfaces found: " + adapters.Length);
+
+        foreach (NetworkInterface adapter in adapters)
+        {
+            Console.WriteLine(new string('-', 40));
+            Console.WriteLine("Description: {0}", adapter.Description);
+            Console.WriteLine("Name: {0}", adapter.Name);
+            Console.WriteLine("Id: {0}", adapter.Id);
+            Console.WriteLine("Type: {0}", adapter.NetworkInterfaceType);
+            Console.WriteLine("Status: {0}", adapter.OperationalStatus);
+            Console.WriteLine("MAC Address: {0}", string.Join(":", adapter.GetPhysicalAddress().GetAddressBytes()));
+        }
+    }
+
+    public static List<IPDevice> AvailableIPv4AddressesAndDeviceNames()
+    {
+        List<IPDevice> result = [];
+        // Console.WriteLine("Available IPv4 Addresses and Device Names:");
+
+        // Get all network interfaces on the local computer
+        NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
+
+        foreach (NetworkInterface networkInterface in networkInterfaces)
+        {
+            // Filter out non-active or irrelevant interfaces (optional, but helpful)
+            if (networkInterface.OperationalStatus != OperationalStatus.Up)
+            {
+                continue;
+            }
+
+            // Get the IP properties for the current interface
+            IPInterfaceProperties ipProperties = networkInterface.GetIPProperties();
+
+            // Iterate through the Unicast IP addresses associated with this interface
+            foreach (UnicastIPAddressInformation addressInfo in ipProperties.UnicastAddresses)
+            {
+                // We are only interested in IPv4 addresses
+                if (addressInfo.Address.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    // Ignore loopback addresses (127.0.0.1)
+                    if (IPAddress.IsLoopback(addressInfo.Address))
+                    {
+                        continue;
+                    }
+
+                    // Print the IPv4 address and the network adapter's description (device name)
+                    result.Add(new IPDevice{IP = addressInfo.Address.ToString(), Device = networkInterface.Description});
+                    // Console.WriteLine($"Address: {addressInfo.Address} | Device Name: {networkInterface.Description}");
+                }
+            }
+        }
+        return result;
+    }
+
+    public static string GetIPv4Address(string deviceName)
+    {
+        string result = "";
+
+        // Get all network interfaces on the local computer
+        NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
+
+        foreach (NetworkInterface networkInterface in networkInterfaces)
+        {
+            // Filter out non-active or irrelevant interfaces (optional, but helpful)
+            if (networkInterface.OperationalStatus != OperationalStatus.Up)
+            {
+                continue;
+            }
+
+            // Get the IP properties for the current interface
+            IPInterfaceProperties ipProperties = networkInterface.GetIPProperties();
+
+            // Iterate through the Unicast IP addresses associated with this interface
+            foreach (UnicastIPAddressInformation addressInfo in ipProperties.UnicastAddresses)
+            {
+                // We are only interested in IPv4 addresses
+                if (addressInfo.Address.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    // Ignore loopback addresses (127.0.0.1)
+                    if (IPAddress.IsLoopback(addressInfo.Address))
+                    {
+                        continue;
+                    }
+
+                    if (networkInterface.Description == deviceName)
+                    {
+                        result = addressInfo.Address.ToString();
+                        break;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+}
 
 public class ServerIPPort
 {
@@ -48,14 +158,17 @@ public class DiscoveryClient
         return servers;
     }
 
-    public async Task DiscoverAsync(MainPage page)
+    public async Task DiscoverAsync(MainPage page, string deviceName)
     {
-        var udp = new UdpClient();
+        IPAddress localIpAddress = IPAddress.Parse(NetworkDeviceHelper.GetIPv4Address(deviceName));
+        IPEndPoint localEndPoint = new IPEndPoint(localIpAddress, 8899);
+        var udp = new UdpClient(localEndPoint);
         udp.EnableBroadcast = true;
         udp.Client.ReceiveTimeout = 3000; // optional timeout
 
+        // IPAddress broadcastAddress = IPAddress.Parse("255.255.255.255");
         var broadcastEP = new IPEndPoint(IPAddress.Broadcast, listenPort);
-        // Console.WriteLine($"Broadcasting discovery request to {broadcastEP}");
+        Console.WriteLine($"Broadcasting discovery request to {broadcastEP}, {IPAddress.Broadcast}");
         byte[] msg = Encoding.UTF8.GetBytes("DISCOVER_REQUEST");
 
         // Send broadcast
@@ -117,6 +230,7 @@ public class DiscoveryClient
                 break;
             }
         }
+        udp.Close();
 
         MainThread.BeginInvokeOnMainThread(() =>
         {

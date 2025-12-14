@@ -116,6 +116,11 @@
             
             <HorizontalStackLayout
                 Spacing="10">
+                <Picker
+                    x:Name="InterfacePicker"
+                    VerticalOptions="Center"
+                    WidthRequest="170"
+                    Margin="0" />
                 <Button
                     Padding="10,0,10,0"
                     Margin="2,5,0,5"
