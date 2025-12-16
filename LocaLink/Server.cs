@@ -4,6 +4,7 @@ using System.Text;
 using System.Net.WebSockets;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Linq.Expressions;
 
 namespace LocaLink;
 
@@ -106,6 +107,9 @@ public class WsMessage
     public string? Time { get; set; }
     public string? Notification { get; set; } = "";
     public List<UserInfo> Users { get; set; } = [];
+    public int StartId { get; set; } = 0;
+    public int EndId { get; set; } = 0;
+    public List<WsMessage> History { get; set; } = [];
 }
 
 public class UserInfo
@@ -193,6 +197,7 @@ public class JsonWebSocketServer
         {
             Type = "notification",
             Name = "System",
+            Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
             Notification = $"<System: server closed>"
         };
         Storage.Add(response);
@@ -288,16 +293,23 @@ public class JsonWebSocketServer
                         }
                         users.Add(new User(msg.Name?.ToString() ?? "Unknown", token, socket, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
                         // Console.WriteLine($"User joined: {msg.Name}, assigned token: {token}");
+                        int maxId = Storage.MaxID();
+                        List<WsMessage> history = Storage.GetRecentsFromID(maxId);
                         await SendJsonAsync(socket, new WsMessage
                         {
                             Type = "join",
                             Data = DateTime.UtcNow.ToString(),
-                            Token = token
+                            Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                            Token = token,
+                            StartId = maxId,
+                            EndId = maxId,
+                            History = history
                         });
                         var response = new WsMessage
                         {
                             Type = "notification",
                             Name = "System",
+                            Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                             Notification = $"<System: {msg.Name} join this server>",
                             Users = GetUsers()
                         };
@@ -308,6 +320,7 @@ public class JsonWebSocketServer
                     {
                         if (GetUser(msg.Token) != null)
                         {
+                            msg.Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                             Storage.Add(msg);
                             await SendJsonAsyncBroadcast(msg);
                         }
@@ -350,6 +363,7 @@ public class JsonWebSocketServer
             {
                 Type = "notification",
                 Name = "System",
+                Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                 Notification = $"<System: {user.Name} leave this server>",
                 Users = GetUsers()
             };
@@ -392,17 +406,31 @@ public class JsonWebSocketServer
         byte[] bytes = Encoding.UTF8.GetBytes(json);
         for (int i = 0; i < users.Count; i += 1)
         {
-            if (msg.Type == "chat") // && socket.State == WebSocketState.Open) // users[i].Socket != socket &&
+            try
             {
-                await users[i].Socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
+                if (msg.Type == "chat") // && socket.State == WebSocketState.Open) // users[i].Socket != socket &&
+                {
+                    await users[i].Socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
+                }
+                else if (msg.Type == "join") // && socket.State == WebSocketState.Open)
+                {
+                    await users[i].Socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
+                }
+                else
+                {
+                    await users[i].Socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
+                }
             }
-            else if (msg.Type == "join") // && socket.State == WebSocketState.Open)
-            {
-                await users[i].Socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
-            }
-            else
-            {
-                await users[i].Socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
+            catch(System.Net.WebSockets.WebSocketException ex) {
+                Console.WriteLine(ex);
+                if (users[i].Socket.State != WebSocketState.Closed)
+                {
+                    await users[i].Socket.CloseAsync(
+                        WebSocketCloseStatus.NormalClosure,
+                        "Connection closed",
+                        CancellationToken.None);
+                }
+                users.Remove(users[i]);
             }
         }
         // await socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);

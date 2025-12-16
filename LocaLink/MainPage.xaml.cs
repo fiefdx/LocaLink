@@ -156,7 +156,7 @@ public partial class MainPage : ContentPage
                         Console.WriteLine($"{msg.Type}: {JsonSerializer.Serialize(msg.Data)}");
                         MainThread.BeginInvokeOnMainThread(() =>
                         {
-                            msg.Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                            // msg.Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                             _wsMessages.Add(msg);
                             // MessagesListView.ScrollTo(msg, ScrollToPosition.End, true);
                         });
@@ -171,6 +171,10 @@ public partial class MainPage : ContentPage
                             ServerIPPort.Text = ServerInfo.Info;
                             LeaveBtn.IsEnabled = true;
                             _wsMessages.Clear();
+                            for (int i = 0; i < msg.History.Count; i++)
+                            {
+                                _wsMessages.Add(msg.History[msg.History.Count - i - 1]);
+                            }
                         });
                     }
                     else if (msg.Type == "notification")

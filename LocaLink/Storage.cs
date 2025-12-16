@@ -56,7 +56,7 @@ public static class Storage
             conn.Open();
             var command = conn.CreateCommand();
             command.CommandText = @"
-                SELECT * FROM History WHERE Id < @id ORDER BY Id DESC LIMIT @total
+                SELECT * FROM History WHERE Id <= @id ORDER BY Id DESC LIMIT @total
             ";
             command.Parameters.AddWithValue("@id", id);
             command.Parameters.AddWithValue("@total", total);
@@ -67,7 +67,28 @@ public static class Storage
                     result.Add(JsonSerializer.Deserialize<WsMessage>(reader.GetString(2)));
                 }
             }
-            command.ExecuteNonQuery();
+        }
+        return result;
+    }
+
+    public static int MaxID()
+    {
+        int result = -1;
+        using (var conn = new SqliteConnection(connectionStr))
+        {
+            conn.Open();
+            var command = conn.CreateCommand();
+            command.CommandText = @"
+                SELECT MAX(Id) FROM History
+            ";
+            using (command)
+            {
+                object r = command.ExecuteScalar();
+                if (r != DBNull.Value && r != null)
+                {
+                    result = Convert.ToInt32(r);
+                }
+            }
         }
         return result;
     }
