@@ -163,6 +163,8 @@
                 x:Name="MessagesListView"
                 BackgroundColor="White"
                 SelectionMode="None"
+                Scrolled="OnMessagesListViewScrolled"
+                VerticalScrollBarVisibility="Always"
                 ItemsSource="{Binding WsMessages}">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="local:WsMessage">

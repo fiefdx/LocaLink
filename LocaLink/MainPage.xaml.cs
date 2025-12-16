@@ -15,6 +15,8 @@ public partial class MainPage : ContentPage
     private List<string> _devicesList = [];
     private List<IPDevice> _networkDevices;
     private string _currentDevice = "";
+    private int HStartId { get; set; } = -1;
+    private int HEndId { get; set; } = -1;
     public ICommand SendCommand { get; }
 
     public MainPage()
@@ -175,6 +177,20 @@ public partial class MainPage : ContentPage
                             {
                                 _wsMessages.Add(msg.History[msg.History.Count - i - 1]);
                             }
+                            HStartId = msg.StartId - msg.History.Count;
+                            HEndId = msg.EndId;
+                        });
+                    }
+                    else if (msg.Type == "load")
+                    {
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            for (int i = 0; i < msg.History.Count; i++)
+                            {
+                                _wsMessages.Insert(0, msg.History[i]);
+                            }
+                            HStartId = msg.StartId - msg.History.Count;
+                            HEndId = msg.EndId;
                         });
                     }
                     else if (msg.Type == "notification")
@@ -295,5 +311,31 @@ public partial class MainPage : ContentPage
     public void OnSendMessageBtnClicked(object sender, EventArgs e)
     {
         OnSendCommand();
+    }
+
+    async public void OnMessagesListViewScrolled(object sender, ScrolledEventArgs e)
+    {
+        // Console.WriteLine($"scroll: {e.ScrollY}");
+        if (e.ScrollY <= 0)
+        {
+            Console.WriteLine($"Reached the top, need to load from history from: {HStartId}");
+            if (HStartId > 0)
+            {
+                var name = "Unknown";
+                if (UserName.Text != "")
+                {
+                    name = UserName.Text;
+                }
+                var msg = new WsMessage
+                {
+                    Type = "load",
+                    StartId = HStartId,
+                    EndId = HEndId,
+                    Token = Servers.WsClient.GetToken(),
+                    Name = name
+                };
+                await Servers.WsClient.SendAsync(msg);
+            }
+        }
     }
 }

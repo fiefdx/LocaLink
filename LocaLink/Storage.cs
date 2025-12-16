@@ -48,7 +48,7 @@ public static class Storage
         }
     }
 
-    public static List<WsMessage> GetRecentsFromID(int id, int total = 5)
+    public static List<WsMessage> GetRecentsFromID(int id, int total = 10)
     {
         List<WsMessage> result = [];
         using (var conn = new SqliteConnection(connectionStr))

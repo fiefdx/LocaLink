@@ -325,6 +325,20 @@ public class JsonWebSocketServer
                             await SendJsonAsyncBroadcast(msg);
                         }
                     }
+                    else if (msg.Type == "load")
+                    {
+                        List<WsMessage> history = Storage.GetRecentsFromID(msg.StartId);
+                        await SendJsonAsync(socket, new WsMessage
+                        {
+                            Type = "load",
+                            Data = DateTime.UtcNow.ToString(),
+                            Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                            Token = msg.Token,
+                            StartId = msg.StartId,
+                            EndId = msg.EndId,
+                            History = history
+                        });
+                    }
                 }
             }
         }
@@ -386,12 +400,7 @@ public class JsonWebSocketServer
         byte[] bytes = Encoding.UTF8.GetBytes(json);
         for (int i = 0; i < users.Count; i += 1)
         {
-            if (msg.Type == "chat" && users[i].Socket == socket && socket.State == WebSocketState.Open)
-            {
-                await users[i].Socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
-                break;
-            }
-            else if (msg.Type == "join" && users[i].Socket == socket && socket.State == WebSocketState.Open)
+            if (users[i].Socket == socket && socket.State == WebSocketState.Open)
             {
                 await users[i].Socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
                 break;
