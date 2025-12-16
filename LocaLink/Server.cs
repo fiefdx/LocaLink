@@ -194,7 +194,7 @@ public class JsonWebSocketServer
             Type = "notification",
             Name = "System",
             Notification = $"<System: server closed>"
-        }
+        };
         Storage.Add(response);
         await SendJsonAsyncBroadcast(response);
         for (int i = 0; i < users.Count; i++)
