@@ -75,15 +75,8 @@ public static class MauiProgram
 #endif
         // AppDataDirectory: C:\Users\breeze\AppData\Local\User Name\com.companyname.localink\Data
         Console.WriteLine($"App Data Path: {FileSystem.Current.AppDataDirectory}");
-        string dbName = "LocaLink.db";
-        string dbFilePath = Path.Combine(FileSystem.Current.AppDataDirectory, dbName);
-        string connectionStr = $"Data Source={dbFilePath}";
-        using (var connection = new SqliteConnection(connectionStr))
-        {
-            connection.Open();
-            // You can now execute SQL commands using SqliteCommand
-            Console.WriteLine("Database connection successful!");
-        }
+        Storage.Init();
+        // Storage.Add(new WsMessage{Name = "test", Data = "this is a test"});
         // int discoveryPort = 8888;
         // int serverPort = 6000;
         // var server = new DiscoveryServer(discoveryPort, serverPort);

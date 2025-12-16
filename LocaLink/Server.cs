@@ -189,12 +189,14 @@ public class JsonWebSocketServer
     async public void Disable()
     {
         Running = false;
-        await SendJsonAsyncBroadcast(new WsMessage
+        var response = new WsMessage
         {
             Type = "notification",
             Name = "System",
             Notification = $"<System: server closed>"
-        });
+        }
+        Storage.Add(response);
+        await SendJsonAsyncBroadcast(response);
         for (int i = 0; i < users.Count; i++)
         {
             await users[i].Socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
@@ -292,18 +294,21 @@ public class JsonWebSocketServer
                             Data = DateTime.UtcNow.ToString(),
                             Token = token
                         });
-                        await SendJsonAsyncBroadcast(new WsMessage
+                        var response = new WsMessage
                         {
                             Type = "notification",
                             Name = "System",
                             Notification = $"<System: {msg.Name} join this server>",
                             Users = GetUsers()
-                        });
+                        };
+                        Storage.Add(response);
+                        await SendJsonAsyncBroadcast(response);
                     }
                     else if (msg.Type == "chat")
                     {
                         if (GetUser(msg.Token) != null)
                         {
+                            Storage.Add(msg);
                             await SendJsonAsyncBroadcast(msg);
                         }
                     }
@@ -341,13 +346,15 @@ public class JsonWebSocketServer
 
             Console.WriteLine($"[Server] User disconnected: {user.Name}");
 
-            await SendJsonAsyncBroadcast(new WsMessage
+            var response = new WsMessage
             {
                 Type = "notification",
                 Name = "System",
                 Notification = $"<System: {user.Name} leave this server>",
                 Users = GetUsers()
-            });
+            };
+            Storage.Add(response);
+            await SendJsonAsyncBroadcast(response);
         }
 
         if (socket.State != WebSocketState.Closed)
