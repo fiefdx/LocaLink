@@ -7,6 +7,8 @@ using System.Text.Json.Schema;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Maui.LifecycleEvents;
+using Microsoft.Data.Sqlite;
+using Microsoft.Maui.Storage;
 
 namespace LocaLink;
 
@@ -71,6 +73,17 @@ public static class MauiProgram
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
+        // AppDataDirectory: C:\Users\breeze\AppData\Local\User Name\com.companyname.localink\Data
+        Console.WriteLine($"App Data Path: {FileSystem.Current.AppDataDirectory}");
+        string dbName = "LocaLink.db";
+        string dbFilePath = Path.Combine(FileSystem.Current.AppDataDirectory, dbName);
+        string connectionStr = $"Data Source={dbFilePath}";
+        using (var connection = new SqliteConnection(connectionStr))
+        {
+            connection.Open();
+            // You can now execute SQL commands using SqliteCommand
+            Console.WriteLine("Database connection successful!");
+        }
         // int discoveryPort = 8888;
         // int serverPort = 6000;
         // var server = new DiscoveryServer(discoveryPort, serverPort);
