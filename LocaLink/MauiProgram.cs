@@ -12,7 +12,7 @@ using Microsoft.Maui.Storage;
 
 namespace LocaLink;
 
-public static class Servers
+public static class Servers // global static class with all servers & clients objects
 {
     public static int DiscoveryPort = 8888;
     public static int ServerPort = 9999; // disable firewall, admin cmd run: netsh http add urlacl url=http://+:9999/ user=Everyone
@@ -48,7 +48,6 @@ public static class MauiProgram
 #if WINDOWS
         builder.ConfigureLifecycleEvents(events =>
         {
-            // Make sure to add "using Microsoft.Maui.LifecycleEvents;" in the top of the file 
             events.AddWindows(windowsLifecycleBuilder =>
             {
                 windowsLifecycleBuilder.OnWindowCreated(window =>
@@ -60,7 +59,7 @@ public static class MauiProgram
                     switch (appWindow.Presenter)
                     {
                         case Microsoft.UI.Windowing.OverlappedPresenter overlappedPresenter:
-                            overlappedPresenter.IsMaximizable = false;
+                            overlappedPresenter.IsMaximizable = false; // disable maximize button on window's title bar
                             // overlappedPresenter.SetBorderAndTitleBar(false, false);
                             // overlappedPresenter.Maximize();
                             break;
@@ -76,23 +75,10 @@ public static class MauiProgram
         // AppDataDirectory: C:\Users\breeze\AppData\Local\User Name\com.companyname.localink\Data
         Console.WriteLine($"App Data Path: {FileSystem.Current.AppDataDirectory}");
         Storage.Init();
-        // Storage.Add(new WsMessage{Name = "test", Data = "this is a test"});
-        // int discoveryPort = 8888;
-        // int serverPort = 6000;
-        // var server = new DiscoveryServer(discoveryPort, serverPort);
-        // var serverThread = new Thread(() =>
-        // {
-        //     server.StartAsync().GetAwaiter().GetResult();
-        // });
 
+        // Start discovery server & websocket server on other threads
         Servers.ServerThread.IsBackground = true;
         Servers.ServerThread.Start();
-        // var client = new DiscoveryClient(discoveryPort);
-        // var wsServer = new JsonWebSocketServer(serverPort);
-        // var wsServerThread = new Thread(async () =>
-        // {
-        //     wsServer.StartAsync();
-        // });
         Servers.WsServerThread.IsBackground = true;
         Servers.WsServerThread.Start();
 

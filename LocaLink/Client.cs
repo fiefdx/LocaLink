@@ -35,17 +35,16 @@ public class NetworkDeviceHelper
         }
     }
 
-    public static List<IPDevice> AvailableIPv4AddressesAndDeviceNames()
+    public static List<IPDevice> AvailableIPv4AddressesAndDeviceNames() // get all available newtork devices
     {
         List<IPDevice> result = [];
-        // Console.WriteLine("Available IPv4 Addresses and Device Names:");
 
         // Get all network interfaces on the local computer
         NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
 
         foreach (NetworkInterface networkInterface in networkInterfaces)
         {
-            // Filter out non-active or irrelevant interfaces (optional, but helpful)
+            // Filter out non-active or irrelevant interfaces
             if (networkInterface.OperationalStatus != OperationalStatus.Up)
             {
                 continue;
@@ -57,7 +56,7 @@ public class NetworkDeviceHelper
             // Iterate through the Unicast IP addresses associated with this interface
             foreach (UnicastIPAddressInformation addressInfo in ipProperties.UnicastAddresses)
             {
-                // We are only interested in IPv4 addresses
+                // only interested in IPv4 addresses
                 if (addressInfo.Address.AddressFamily == AddressFamily.InterNetwork)
                 {
                     // Ignore loopback addresses (127.0.0.1)
@@ -66,16 +65,14 @@ public class NetworkDeviceHelper
                         continue;
                     }
 
-                    // Print the IPv4 address and the network adapter's description (device name)
                     result.Add(new IPDevice{IP = addressInfo.Address.ToString(), Device = networkInterface.Description});
-                    // Console.WriteLine($"Address: {addressInfo.Address} | Device Name: {networkInterface.Description}");
                 }
             }
         }
         return result;
     }
 
-    public static string GetIPv4Address(string deviceName)
+    public static string GetIPv4Address(string deviceName) // get specific network device's ip address
     {
         string result = "";
 
@@ -96,7 +93,7 @@ public class NetworkDeviceHelper
             // Iterate through the Unicast IP addresses associated with this interface
             foreach (UnicastIPAddressInformation addressInfo in ipProperties.UnicastAddresses)
             {
-                // We are only interested in IPv4 addresses
+                // only interested in IPv4 addresses
                 if (addressInfo.Address.AddressFamily == AddressFamily.InterNetwork)
                 {
                     // Ignore loopback addresses (127.0.0.1)
@@ -141,10 +138,8 @@ public class ServerIPPort
     }
 }
 
-public class DiscoveryClient
+public class DiscoveryClient // udp broadcast server discovery client
 {
-    // private UdpClient udp;
-    // private IPEndPoint broadcastEP;
     private List<ServerIPPort> servers = new List<ServerIPPort>();
     private readonly int listenPort;
 
@@ -173,16 +168,13 @@ public class DiscoveryClient
 
         // Send broadcast
         await udp.SendAsync(msg, msg.Length, broadcastEP);
-        // Console.WriteLine("Broadcasted discovery request.");
 
         // Listen for responses (possibly multiple)
         DateTime end = DateTime.Now.AddSeconds(3);
-        // Console.WriteLine($"{DateTime.Now.ToString()} => {end.ToString()}");
 
         servers.Clear();
         while (DateTime.Now < end)
         {
-            // Console.WriteLine(DateTime.Now.ToString() + " Waiting for responses...");
             try
             {
                 var receiveTask = udp.ReceiveAsync();
@@ -197,11 +189,9 @@ public class DiscoveryClient
                 } else
                 {
                     // timeout
-                    // Console.WriteLine("Receive timeout.");
                     continue;
                 }
                 
-                // Console.WriteLine($"Found service: {result.RemoteEndPoint} => {reply}");
                 if (reply.Split(';')[0] == "DISCOVER_RESPONSE_LOCALINK")
                 {
                     var parts = reply.Split(';');
@@ -220,13 +210,11 @@ public class DiscoveryClient
                     }
                     var server = new ServerIPPort(result.RemoteEndPoint.Address.ToString(), port, name);
                     servers.Add(server);
-                    // server.ConsoleOutput();
                 }
             }
             catch (SocketException)
             {
                 // timeout
-                // Console.WriteLine("SocketException");
                 break;
             }
         }
@@ -236,13 +224,10 @@ public class DiscoveryClient
         {
             page.UpdateServers(servers);
         });
-        
-        // Console.WriteLine("Discovery finished.");
     }
 }
 
-
-public class JsonWebSocketClient
+public class JsonWebSocketClient // websocket client for client and server communication
 {
     private ClientWebSocket socket = new();
     private Uri uri;
@@ -253,7 +238,7 @@ public class JsonWebSocketClient
 
     public bool Opened()
     {
-        Console.WriteLine($"socket.State: {socket.State}");
+        // Console.WriteLine($"socket.State: {socket.State}");
         return socket.State == WebSocketState.Open;
     }
 
@@ -289,18 +274,13 @@ public class JsonWebSocketClient
             try
             {
                 socket = new ClientWebSocket();
-                // Console.WriteLine("[Client] Connecting...");
                 await socket.ConnectAsync(uri, CancellationToken.None);
-                // Console.WriteLine("[Client] Connected!");
-
                 await ReceiveLoop();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("[Client] Error: " + ex.Message + ", " + uri.AbsoluteUri);
             }
-
-            // Console.WriteLine("[Client] Reconnecting in 3 seconds...");
             await Task.Delay(3000);
         }
     }

@@ -18,6 +18,7 @@ public partial class MainPage : ContentPage
     private int HStartId { get; set; } = -1;
     private int HEndId { get; set; } = -1;
     public ICommand SendCommand { get; }
+    private bool _historyLoading = false;
 
     public MainPage()
     {
@@ -45,12 +46,7 @@ public partial class MainPage : ContentPage
         }
     }
 
-    public void OnTestClicked(object sender, EventArgs e)
-    {
-        Console.WriteLine("test clicked");
-    }
-
-    protected override void OnAppearing()
+    protected override void OnAppearing() // setup window size
     {
         base.OnAppearing();
         this.Window.MinimumHeight = 720;
@@ -131,10 +127,9 @@ public partial class MainPage : ContentPage
     {
         if (e.SelectedItem != null)
         {
-            // Cast the selected item to your model type
+            // Cast the selected item to your WsServerInfo type
             var ServerInfo = (WsServerInfo)e.SelectedItem;
             
-            // DisplayAlert("Join Server", $"Name: {ServerInfo.Name}\nAddress: {ServerInfo.Info}", "OK");
             bool answer = await DisplayAlert("Join Server", $"Name: {ServerInfo.Name}\nAddress: {ServerInfo.Info}", "Yes", "No");
             if (answer)
             {
@@ -153,17 +148,15 @@ public partial class MainPage : ContentPage
                 Servers.WsClientThread.Start();
                 Servers.WsClient.OnMessage += (msg) =>
                 {
-                    if (msg.Type == "chat")
+                    if (msg.Type == "chat") // processing chat response
                     {
                         Console.WriteLine($"{msg.Type}: {JsonSerializer.Serialize(msg.Data)}");
                         MainThread.BeginInvokeOnMainThread(() =>
                         {
-                            // msg.Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                             _wsMessages.Add(msg);
-                            // MessagesListView.ScrollTo(msg, ScrollToPosition.End, true);
                         });
                     }
-                    else if (msg.Type == "join")
+                    else if (msg.Type == "join") // processing join response
                     {
                         Servers.WsClient.SetToken(msg.Token.ToString());
                         Console.WriteLine($"Get Token: {Servers.WsClient.GetToken()}");
@@ -181,10 +174,11 @@ public partial class MainPage : ContentPage
                             HEndId = msg.EndId;
                         });
                     }
-                    else if (msg.Type == "load")
+                    else if (msg.Type == "load") // processing history load response
                     {
                         MainThread.BeginInvokeOnMainThread(() =>
                         {
+                            _historyLoading = false;
                             for (int i = 0; i < msg.History.Count; i++)
                             {
                                 _wsMessages.Insert(0, msg.History[i]);
@@ -193,12 +187,11 @@ public partial class MainPage : ContentPage
                             HEndId = msg.EndId;
                         });
                     }
-                    else if (msg.Type == "notification")
+                    else if (msg.Type == "notification") // processing notification data
                     {
                         MainThread.BeginInvokeOnMainThread(() =>
                         {
                             msg.Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                            // Console.WriteLine($"Get {msg.Type}: {msg.Data}");
                             _wsMessages.Add(msg);
                             _userInfos.Clear();
                             for (int i = 0; i < msg.Users.Count; i += 1)
@@ -213,7 +206,6 @@ public partial class MainPage : ContentPage
                                     Servers.WsClient = null;
                                 }
                             }
-                            // MessagesListView.ScrollTo(msg, ScrollToPosition.End, true);
                         });
                     }
                 };
@@ -238,8 +230,6 @@ public partial class MainPage : ContentPage
             {
                 Console.WriteLine("User chose No.");
             }
-
-            // Optional: Deselect the item after action (prevents the event from firing repeatedly if re-selected)
             ((ListView)sender).SelectedItem = null;
         }
     }
@@ -315,26 +305,29 @@ public partial class MainPage : ContentPage
 
     async public void OnMessagesListViewScrolled(object sender, ScrolledEventArgs e)
     {
-        // Console.WriteLine($"scroll: {e.ScrollY}");
         if (e.ScrollY <= 0)
         {
             Console.WriteLine($"Reached the top, need to load from history from: {HStartId}");
-            if (HStartId > 0)
+            if (HStartId > 0 && _historyLoading == false)
             {
+                _historyLoading = true;
                 var name = "Unknown";
                 if (UserName.Text != "")
                 {
                     name = UserName.Text;
                 }
-                var msg = new WsMessage
+                if (Servers.WsClient != null)
                 {
-                    Type = "load",
-                    StartId = HStartId,
-                    EndId = HEndId,
-                    Token = Servers.WsClient.GetToken(),
-                    Name = name
-                };
-                await Servers.WsClient.SendAsync(msg);
+                    var msg = new WsMessage
+                    {
+                        Type = "load",
+                        StartId = HStartId,
+                        EndId = HEndId,
+                        Token = Servers.WsClient.GetToken(),
+                        Name = name
+                    };
+                    await Servers.WsClient.SendAsync(msg);
+                }
             }
         }
     }

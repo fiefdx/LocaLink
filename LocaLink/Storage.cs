@@ -11,9 +11,8 @@ public static class Storage
     public static string dbName = "LocaLink.db";
     public static string dbFilePath = Path.Combine(FileSystem.Current.AppDataDirectory, dbName);
     public static string connectionStr = $"Data Source={dbFilePath}";
-    // public static SqliteConnection conn;
 
-    public static void Init()
+    public static void Init() // create database History table
     {
         using (var conn = new SqliteConnection(connectionStr))
         {
@@ -28,11 +27,10 @@ public static class Storage
             var command = conn.CreateCommand();
             command.CommandText = sql;
             command.ExecuteNonQuery();
-            Console.WriteLine("Database connection successful!");
         }
     }
     
-    public static void Add(WsMessage msg)
+    public static void Add(WsMessage msg) // add one message record into History table
     {
         using (var conn = new SqliteConnection(connectionStr))
         {
@@ -48,7 +46,7 @@ public static class Storage
         }
     }
 
-    public static List<WsMessage> GetRecentsFromID(int id, int total = 10)
+    public static List<WsMessage> GetRecentsFromID(int id, int total = 10) // get recent 10 records from History table, start by id
     {
         List<WsMessage> result = [];
         using (var conn = new SqliteConnection(connectionStr))
@@ -71,7 +69,7 @@ public static class Storage
         return result;
     }
 
-    public static int MaxID()
+    public static int MaxID() // return current max id from History table
     {
         int result = -1;
         using (var conn = new SqliteConnection(connectionStr))

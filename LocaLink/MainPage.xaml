@@ -94,11 +94,6 @@
                                     LineBreakMode="TailTruncation" />
                             </StackLayout>
                         </ViewCell>
-                        <!-- <TextCell
-                            Text="{Binding Name}"
-                            Detail="{Binding Info}"
-                            TextColor="Black"
-                            DetailColor="Green" /> -->
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
@@ -135,22 +130,7 @@
                     HorizontalOptions="Fill" />
             </HorizontalStackLayout>
         </VerticalStackLayout>
-
-        <!-- <VerticalStackLayout
-            Grid.Row="7"
-            Grid.Column="0"
-            Grid.ColumnSpan="2"
-            Grid.RowSpan="1"
-            Margin="8,0,0,0"
-            HorizontalOptions="Fill"
-            VerticalOptions="Fill"
-            Spacing="5">
-            <Label x:Name="SwitchStatusLabel"
-                        Text="Server-192.168.2.3:6000"
-                        TextColor="Gray"
-                        FontSize="16" />
-        </VerticalStackLayout> -->
-
+        
         <Border
             Grid.Row="0"
             Grid.Column="2"
@@ -191,12 +171,6 @@
                                         MaxLines="1" 
                                         LineBreakMode="TailTruncation" />
                                 </HorizontalStackLayout>
-                                <!-- <Label
-                                    Text="{Binding Name}"
-                                    TextColor="Blue"
-                                    FontSize="12"
-                                    MaxLines="1" 
-                                    LineBreakMode="TailTruncation" /> -->
                                 <Label
                                     Text="{Binding Data}"
                                     FontSize="16"
@@ -204,7 +178,6 @@
                                     LineBreakMode="TailTruncation" />
                             </StackLayout>
                         </ViewCell>
-                        <!-- <TextCell Text="{Binding Name}" Detail="{Binding Message}" /> -->
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </controls:AutoScrollListView>

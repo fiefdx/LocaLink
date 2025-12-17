@@ -8,7 +8,7 @@ using System.Linq.Expressions;
 
 namespace LocaLink;
 
-public class DiscoveryServer
+public class DiscoveryServer // udp server, for client to discovery websocket server in the same local network
 {
     private UdpClient udp;
     public string Name { get; set; } = "Unknown";
@@ -21,45 +21,26 @@ public class DiscoveryServer
         Port = port;
     }
 
-    public void Enable()
+    public void Enable() // enable this server
     {
         Running = true;
     }
 
-    public void Disable()
+    public void Disable() // disable this server
     {
         Running = false;
     }
 
     public async Task StartAsync()
     {
-        // Console.WriteLine($"Discovery server listening on {udp.Client.LocalEndPoint}");
         while (true)
         {
             if (Running)
             {
-                // var receiveTask = udp.ReceiveAsync();
-                // var timeoutTask = Task.Delay(2000);
-                // var completed = await Task.WhenAny(receiveTask, timeoutTask);
-                // string msg = "";
-                // var result = default(UdpReceiveResult);
-                // if (completed == receiveTask)
-                // {
-                //     result = receiveTask.Result;
-                //     msg = Encoding.UTF8.GetString(result.Buffer);
-                // } else
-                // {
-                //     // timeout
-                //     // Console.WriteLine("Timeout waiting for discovery requests.");
-                //     continue;
-                // }
                 try
                 {
                     var result = await udp.ReceiveAsync();
                     string msg = Encoding.UTF8.GetString(result.Buffer);
-
-                    // Console.WriteLine($"Ping from {result.RemoteEndPoint}: {msg}");
-
                     if (msg == "DISCOVER_REQUEST" && Running)
                     {
                         string reply = $"DISCOVER_RESPONSE_LOCALINK;PORT={Port};NAME={Name}";
@@ -67,7 +48,6 @@ public class DiscoveryServer
 
                         // Respond directly to the sender (unicast)
                         await udp.SendAsync(data, data.Length, result.RemoteEndPoint);
-                        // Console.WriteLine("Sent discovery response.");
                     }
                 }
                 catch (SocketException ex)
@@ -82,7 +62,6 @@ public class DiscoveryServer
             else
             {
                 await Task.Delay(100);
-                // continue;
             }
         }
     }
@@ -95,7 +74,6 @@ public class WsServerInfo
     public string Host { get; set; } = "";
     public int Port { get; set; } = 0;
 }
-
 
 public class WsMessage
 {
@@ -118,10 +96,9 @@ public class UserInfo
     public string Time { get; set; } = "";
 }
 
-
 public class User
 {
-    public string Name { get; set; } = "Guest";
+    public string Name { get; set; } = "Unknown";
     private string Token { get; set; } = "";
     public string IP { get; set; } = "";
     public int Port { get; set; } = 0;
@@ -142,14 +119,13 @@ public class User
     }
 }
 
-
 public class JsonWebSocketServer
 {
     public int Port { get; set; } = 6000;
     public bool Running = false;
     public int TokenCounter = 0;
     private List<User> users = new List<User>();
-    private string ManagerToken = "";
+    private string ManagerToken = ""; // for future use
 
     public JsonWebSocketServer(int port)
     {
@@ -185,12 +161,12 @@ public class JsonWebSocketServer
         return $"token_{TokenCounter}_{DateTime.UtcNow.Ticks}";
     }
 
-    public void Enable()
+    public void Enable() // enable this server
     {
         Running = true;
     }
 
-    async public void Disable()
+    async public void Disable() // disable this server
     {
         Running = false;
         var response = new WsMessage
@@ -228,13 +204,10 @@ public class JsonWebSocketServer
         listener.Prefixes.Add($"http://+:{Port}/");
         listener.Start();
 
-        // Console.WriteLine($"JSON WebSocket server started at ws://localhost:{Port}/ws");
-
         while (true)
         {
             if (Running)
             {
-                // Console.WriteLine("websocket server running ...");
                 var ctx = await listener.GetContextAsync();
 
                 if (!ctx.Request.IsWebSocketRequest)
@@ -259,9 +232,6 @@ public class JsonWebSocketServer
         var clientIp = ctx.Request.RemoteEndPoint.Address;
         var wsCtx = await ctx.AcceptWebSocketAsync(null);
         var socket = wsCtx.WebSocket;
-
-        // Console.WriteLine("Client connected.");
-
         var buffer = new byte[8192];
 
         try
@@ -276,23 +246,17 @@ public class JsonWebSocketServer
                 string json = Encoding.UTF8.GetString(buffer, 0, result.Count);
                 var msg = JsonSerializer.Deserialize<WsMessage>(json)!;
 
-                Console.WriteLine($"[Server] Received {msg.Type}: {json}");
-
                 if (Running)
                 {
-                    if (msg.Type == "join")
+                    if (msg.Type == "join") // processing join request
                     {
-                        // Console.Write($"\bUser joining: {msg.Name}, from {clientIp}\n>");
                         var isLocal = IsLocalConnection(clientIp.ToString());
-                        // Console.Write($"\bUser joining: {msg.Name}, from {clientIp} (Local Manager: {isLocal})\n>");
                         var token = GenerateToken();
                         if (isLocal)
                         {
                             ManagerToken = token;
-                            // Console.WriteLine("Assigned as Manager.");
                         }
                         users.Add(new User(msg.Name?.ToString() ?? "Unknown", token, socket, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")));
-                        // Console.WriteLine($"User joined: {msg.Name}, assigned token: {token}");
                         int maxId = Storage.MaxID();
                         List<WsMessage> history = Storage.GetRecentsFromID(maxId);
                         await SendJsonAsync(socket, new WsMessage
@@ -316,7 +280,7 @@ public class JsonWebSocketServer
                         Storage.Add(response);
                         await SendJsonAsyncBroadcast(response);
                     }
-                    else if (msg.Type == "chat")
+                    else if (msg.Type == "chat") // processing chat request
                     {
                         if (GetUser(msg.Token) != null)
                         {
@@ -325,7 +289,7 @@ public class JsonWebSocketServer
                             await SendJsonAsyncBroadcast(msg);
                         }
                     }
-                    else if (msg.Type == "load")
+                    else if (msg.Type == "load") // processing history load request
                     {
                         List<WsMessage> history = Storage.GetRecentsFromID(msg.StartId);
                         await SendJsonAsync(socket, new WsMessage
@@ -370,7 +334,6 @@ public class JsonWebSocketServer
         if (user != null)
         {
             users.Remove(user);
-
             Console.WriteLine($"[Server] User disconnected: {user.Name}");
 
             var response = new WsMessage
@@ -406,7 +369,6 @@ public class JsonWebSocketServer
                 break;
             }
         }
-        // await socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
     private async Task SendJsonAsyncBroadcast(WsMessage msg)
@@ -417,11 +379,11 @@ public class JsonWebSocketServer
         {
             try
             {
-                if (msg.Type == "chat") // && socket.State == WebSocketState.Open) // users[i].Socket != socket &&
+                if (msg.Type == "chat")
                 {
                     await users[i].Socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
                 }
-                else if (msg.Type == "join") // && socket.State == WebSocketState.Open)
+                else if (msg.Type == "join")
                 {
                     await users[i].Socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
                 }
@@ -442,6 +404,5 @@ public class JsonWebSocketServer
                 users.Remove(users[i]);
             }
         }
-        // await socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
     }
 }
